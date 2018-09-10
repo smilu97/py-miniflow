@@ -10,3 +10,6 @@ It may be a very-easy, most basic version of Deep-learning framework.
 
 - [x] Basic Graph Node
 - [x] XOR learning test
+- [ ] Concat, Split
+- [ ] Transpose
+- [ ] Convolution2D, MaxPool, AvgPool etc...
