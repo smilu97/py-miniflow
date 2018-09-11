@@ -16,7 +16,7 @@ Simple logistic regression
 - 2 HiddenLayer (S0 = sigmoid(x * V0 + b0))
 - 1 Output (S1 = sigmoid(S0 * V1 + b1))
   
-### Tensorflow-like graph building
+### [Tensorflow-like graph building](test/xor.py)
 
 ```python
 sess = fl.Session(lr=0.1)
