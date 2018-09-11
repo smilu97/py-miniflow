@@ -3,7 +3,7 @@
 
 ## What is miniflow?
 
-Miniflow is a implementing project of tensorflow-like functions, utilities just for studying.
+Miniflow is a implementing project of [tensorflow](https://github.com/tensorflow/tensorflow)-like functions, utilities just for studying.
 It may be a very-easy, most basic version of Deep-learning framework
 
 ## How to try
@@ -27,7 +27,7 @@ Simple logistic regression
 - 2 HiddenLayer (S0 = sigmoid(x * V0 + b0))
 - 1 Output (S1 = sigmoid(S0 * V1 + b1))
   
-### [Tensorflow-like graph building](test/xor.py)
+### [Graph building example](test/xor.py)
 
 ```python
 sess = fl.Session(lr=0.1)
