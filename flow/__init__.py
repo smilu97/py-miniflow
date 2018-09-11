@@ -27,15 +27,13 @@ def xor_test():
 
     V0 = VariableNode(sess, xavier(2,2))
     b0 = VariableNode(sess, xavier(2))
-    b0_tiled = TileNode(sess, [b0], 4, 0)
-    S0 = SigmoidNode(sess, [AddNode(sess, [MatmulNode(sess, [x, V0]), b0_tiled])])
+    S0 = SigmoidNode(sess, [AddNode(sess, [MatmulNode(sess, [x, V0]), b0])])
 
     V1 = VariableNode(sess, xavier(2,1))
     b1 = VariableNode(sess, xavier(1))
-    b1_tiled = TileNode(sess, [b1], 4, 0)
-    S1 = SigmoidNode(sess, [AddNode(sess, [MatmulNode(sess, [S0, V1]), b1_tiled])])
+    S1 = SigmoidNode(sess, [AddNode(sess, [MatmulNode(sess, [S0, V1]), b1])])
 
-    E = ReduceSumNode(sess, [SquareNode(sess, [SubNode(sess, [S1, y])])], 0)
+    E = SumNode(sess, [SquareNode(sess, [SubNode(sess, [S1, y])])], 0)
 
     print('start error:', E.get_result(1))
 

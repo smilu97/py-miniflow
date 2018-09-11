@@ -6,7 +6,8 @@ class Node:
         self.sess = sess
         self.children = children
         self.parentNum = 0
-        self.result = None
+        if not hasattr(self, 'result'):
+            self.result = None
         self.result_version = 0
         self.gradient = None
         self.numGradient = 0
@@ -15,7 +16,14 @@ class Node:
             child.parentNum += 1
         
         sess.register_node(self)
+
+        self.shape = self.calc_shape(*[child.shape for child in children])
     
+    def get_name(self):
+        if (not hasattr(self, 'name')) or self.name is None:
+            self.name = self.calc_name(*[child.get_name() for child in self.children])
+        return self.name
+
     def get_result(self, version=None):
         if version == None:
             version = self.result_version + 1
@@ -56,3 +64,6 @@ class Node:
     
     def calc_gradients(self):
         return []
+    
+    def calc_shape(self):
+        return None
