@@ -28,7 +28,7 @@ def test():
 
     E = fl.sum(fl.square(S1 - y), axis=0)
 
-    print('start error:', E.get_result(1))
+    print('start error:', E.get_result())
 
     epoch = 10000
     with pb.ProgressBar(max_value=epoch) as bar:
