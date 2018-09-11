@@ -1,1 +1,4 @@
 numpy==1.15.1
+progressbar2==3.38.0
+python-utils==2.3.0
+six==1.11.0

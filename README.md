@@ -6,6 +6,17 @@
 Miniflow is a implementing project of tensorflow-like functions, utilities just for studying.
 It may be a very-easy, most basic version of Deep-learning framework
 
+## How to try
+
+```sh
+git clone https://github.com/smilu97/miniflow
+cd miniflow
+virtualenv venv -p python3
+source venv/bin/activate
+pip install -r requirements.txt
+python test.py
+```
+
 ## Learning XOR Test
 
 ![xor_test](static/xor_test.png)
