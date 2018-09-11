@@ -1,3 +1,3 @@
-import flow
+from test.xor import test
 
-flow.xor_test()
+test()
