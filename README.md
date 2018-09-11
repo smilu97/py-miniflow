@@ -15,7 +15,32 @@ Simple logistic regression
 - 2 Input (x)
 - 2 HiddenLayer (S0 = sigmoid(x * V0 + b0))
 - 1 Output (S1 = sigmoid(S0 * V1 + b1))
+  
+### Tensorflow-like graph building
 
+```python
+sess = fl.Session(lr=0.1)
+
+train_x = np.array([[0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1]])
+train_y = np.array([[0],[1],[1],[0]])
+
+x = fl.Placeholder(sess, train_x, 'x')
+
+y = fl.Placeholder(sess, train_y, 'y')
+
+V0 = fl.Variable(sess, fl.xavier(2,2))
+b0 = fl.Variable(sess, fl.xavier(2))
+S0 = fl.sigmoid(fl.matmul(x, V0) + b0)
+
+V1 = fl.Variable(sess, fl.xavier(2,1))
+b1 = fl.Variable(sess, fl.xavier(1))
+S1 = fl.sigmoid(fl.matmul(S0, V1) + b1)
+
+E = fl.sum(fl.square(S1 - y), axis=0)
+```
 
 ## TODO
 
