@@ -8,7 +8,7 @@ It may be a very-easy, most basic version of Deep-learning framework
 
 ## Learning XOR Test
 
-![static/xor_result.png](xor_result)
+![xor_result](static/xor_result.png)
 
 Simple logistic regression
     - 2 Input (x)
