@@ -189,7 +189,37 @@ class SigmoidNode(Node):
     
     def calc_name(self, a):
         return 'Sigmoid({})'.format(a)
+    
+class ReluNode(Node):
 
+    def calc_result(self, a):
+        return np.maximum(a, 0)
+    
+    def calc_gradient(self):
+        return (self.result > 0) * self.gradient
+    
+    def calc_shape(self, a):
+        return a
+    
+    def calc_name(self, a):
+        return 'Relu({})'.format(a)
+
+class SoftmaxNode(Node):
+
+    def calc_result(self, a):
+        self.exps = np.exp(a - np.max(a))
+        return exps / np.sum(exps)
+    
+    def calc_gradient(self):
+        expsum = np.sum(self.exps)
+        return self.exps * np.log(self.exps + expsum) * self.exps
+    
+    def calc_shape(self, a):
+        return a
+    
+    def calc_name(self, a):
+        return 'Softmax({})'.format(a)
+    
 class SquareNode(Node):
 
     def calc_result(self, a):
