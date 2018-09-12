@@ -12,6 +12,15 @@ def sub(a, b):
 def sigmoid(a):
     return SigmoidNode(a.sess, [a])
 
+def relu(a):
+    return ReluNode(a.sess, [a])
+
+def softmax(a):
+    return SoftmaxNode(a.sess, [a])
+
+def log(a):
+    return LogNode(a.sess, [a])
+
 def square(a):
     return SquareNode(a.sess, [a])
 
@@ -23,3 +32,6 @@ def concat(a, b, axis=0):
 
 def sum(a, axis):
     return SumNode(a.sess, [a], axis)
+
+def conv2d(a, b):
+    return Conv2DNode(a.sess, [a, b])

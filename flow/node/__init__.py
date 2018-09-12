@@ -196,7 +196,7 @@ class ReluNode(Node):
         return np.maximum(a, 0)
     
     def calc_gradient(self):
-        return (self.result > 0) * self.gradient
+        return [(self.result > 0) * self.gradient]
     
     def calc_shape(self, a):
         return a
@@ -211,14 +211,31 @@ class SoftmaxNode(Node):
         return exps / np.sum(exps)
     
     def calc_gradient(self):
-        expsum = np.sum(self.exps)
-        return self.exps * np.log(self.exps + expsum) * self.exps
+        exps = self.exps
+        expsum = self.sum(exp)
+        expsum2 = expsum ** 2
+        return [exps * (self.gradient + np.sum(-exps / expsum2 * self.gradient))]
     
     def calc_shape(self, a):
         return a
     
     def calc_name(self, a):
         return 'Softmax({})'.format(a)
+    
+class LogNode(Node):
+
+    def calc_result(self, a):
+        return np.log(a)
+    
+    def calc_gradient(self):
+        v0 = self.children[0].get_result(self.result_version)
+        return [1 / v0]
+    
+    def calc_shape(self, a):
+        return a
+
+    def calc_name(self, a):
+        return 'Log({})'.format(a)
     
 class SquareNode(Node):
 
