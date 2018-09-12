@@ -79,10 +79,3 @@ def mult_conv2d_gradient(gradient, a, filter_wh):
     m = np.lib.stride_tricks.as_strided(a, shape=m_shape, strides=m_strides)
     # [out_channel, in_channel, filter_width, filter_height]
     return np.einsum('aibc,abcjkl->ijkl', gradient, m)
-
-a = np.ones((5, 3, 5, 5))
-b = np.ones((2, 3, 2, 2))
-c = mult_conv2d(a, b)
-g = mult_conv2d_gradient(c, a, (2, 2))
-print(b.shape)
-print(g.shape)
