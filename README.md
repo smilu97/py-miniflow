@@ -60,4 +60,5 @@ E = fl.sum(fl.square(S1 - y), axis=0)
 - [x] Concat, Select - not tested
 - [x] Transpose
 - [x] Shape validations
-- [ ] Convolution2D, MaxPool, AvgPool etc...
+- [x] Convolution2D
+- [ ] MaxPool, AvgPool etc...

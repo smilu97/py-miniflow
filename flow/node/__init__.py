@@ -304,3 +304,21 @@ class TransposeNode(Node):
     
     def calc_name(self, a):
         return 'Transpose({})'.format(a)
+    
+class Conv2DNode(Node):
+
+    def calc_result(self, a, b):
+        self.filter_wh = b.shape[2:]
+        return mult_conv2d(a, b)
+    
+    def calc_gradient(self):
+        g = mult_conv2d_gradient(self.gradient, self.children[0].result, self.filter_wh)
+        return [None, g]
+    
+    def calc_shape(self, a, b):
+        if a[1] != b[1]:
+            raise Exception('Conv2D: not proper filter in_channel size (2nd dim)')
+        return (a[0], b[0], a[2] - b[2] + 1, a[3] - b[3] + 1)
+    
+    def calc_name(self, a, b):
+        return 'Conv2D({},{})'.format(a, b)
