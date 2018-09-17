@@ -7,23 +7,23 @@ import pickle
 
 M = 10
 N = 500
-lr = 0.000001
-epoch = 20000
+lr = 0.001
+epoch = 1000
 
 def answer(x, error=0.0):
     return np.sin(2 * np.pi * x) + np.random.rand(*(x.shape)) * error
 
 def test(train=True):
 
-    sess =  fl.Session(lr=lr)
+    sess =  fl.Session()
 
     def initializer(*shape):
-        return np.random.rand(*shape) * 2 - 1.0
+        return (np.random.rand(*shape) * 2 - 1.0) * 1.0
 
-    input_size = 1
+    input_size = 1 # Constant
     h1 = 200
     h2 = 200
-    output_size = 2
+    output_size = 2 # Constant
 
     W0 = fl.Variable(sess, initializer(input_size, h1))
     b0 = fl.Variable(sess, np.zeros(h1))
@@ -41,20 +41,22 @@ def test(train=True):
         'b2': b2,
     }
 
-    x = fl.Placeholder(sess, train_x, 'x')
-    y = fl.Placeholder(sess, train_y, 'y')
+    x = fl.Placeholder(sess, np.zeros((N, 1)), 'x')
+    y = fl.Placeholder(sess, np.zeros((N, 1)), 'y')
     
     activation = fl.tanh
 
     S0 = activation(fl.matmul(x, W0) + b0)
     S1 = activation(fl.matmul(S0, W1) + b1)
-    S2 = activation(fl.matmul(S1, W2) + b2)
+    S2 = (fl.matmul(S1, W2) + b2)
 
     p = fl.select(S2, 1, 0, 1)
     q = fl.select(S2, 1, 1, 2)
 
     y_ = p / q
-    E = fl.sum(fl.sum(fl.square(y - y_), 0), 0)
+    E = fl.avg(fl.avg(fl.square(y - y_), 0), 0)
+
+    optimizer = fl.AdamOptimizer(sess, lr=lr)
 
     def save():
         fd = open('save.sav', 'wb')
@@ -77,7 +79,11 @@ def test(train=True):
         x.result.sort()
         x.result = np.expand_dims(x.result, 1)
         y.result = answer(x.result)
-        E.minimize()
+        optimizer.minimize(E)
+    
+    if False:
+        for _ in pb.progressbar(range(epoch)):
+            train()
 
     answer_x = np.arange(-4, 4, 0.01)
     answer_y = answer(answer_x)

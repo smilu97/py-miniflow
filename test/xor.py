@@ -4,7 +4,7 @@ import progressbar as pb
 
 def test():
 
-    sess = fl.Session(lr=0.1)
+    sess = fl.Session()
 
     # Vx + b = y
 
@@ -31,12 +31,14 @@ def test():
 
     E = fl.sum(fl.square(S1 - y), axis=0)
 
+    optimizer = fl.GradientDescentOptimizer(sess, lr=0.1)
+
     print('start error:', E.get_result())
 
     epoch = 10000
     with pb.ProgressBar(max_value=epoch) as bar:
         for i in range(epoch):
-            E.minimize()
+            optimizer.minimize(E)
             bar.update(i)
     
     print('last error:', E.get_result())

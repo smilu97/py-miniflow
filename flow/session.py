@@ -2,15 +2,14 @@ import numpy as np
 
 class Session:
 
-    def __init__(self, lr=0.001):
+    def __init__(self):
         self.nodes = []
         self.placeholders = {}
         self.trainable_nodes = []
-        self.lr = lr
     
     def register_node(self, node):
         self.nodes.append(node)
-        if hasattr(node, 'apply_gradient'):
+        if node.trainable:
             self.trainable_nodes.append(node)
     
     def register_placeholder(self, node):
@@ -23,8 +22,4 @@ class Session:
         for node in self.nodes:
             node.gradient = 0
             node.numGradient = 0
-    
-    def apply_gradients(self):
-        for node in self.trainable_nodes:
-            node.apply_gradient()
             

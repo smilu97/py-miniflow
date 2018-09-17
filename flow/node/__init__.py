@@ -12,6 +12,8 @@ class Node:
         self.result_version = 0
         self.gradient = None
         self.numGradient = 0
+        self.trainable = False
+        self.initializer_props = None
 
         for child in children:
             child.parentNum += 1
@@ -56,13 +58,6 @@ class Node:
         else:
             self.gradient += gradient
     
-    def minimize(self):
-        result = self.get_result(self.result_version + 1)
-        self.sess.clean_gradients()
-        self.gradient = np.ones_like(result)
-        self.propagate_gradient()
-        self.sess.apply_gradients()
-    
     def calc_result(self):
         return self.result
     
@@ -101,9 +96,7 @@ class Variable(Node):
     def __init__(self, sess, value, **kwargs):
         self.result = np.float32(value)
         super().__init__(sess, [], **kwargs)
-
-    def apply_gradient(self):
-        self.result -= self.gradient * self.sess.lr
+        self.trainable = True
     
     def calc_shape(self):
         return self.result.shape
@@ -261,7 +254,8 @@ class ReluNode(Node):
         return np.maximum(a, 0)
     
     def calc_gradients(self):
-        return [(self.result > 0) * self.gradient]
+        v0 = self.children[0].get_result(self.result_version)
+        return [np.heaviside(v0, 0) * self.gradient]
     
     def calc_shape(self, a):
         return a
@@ -343,6 +337,28 @@ class SumNode(Node):
 
     def calc_gradients(self):
         return [np.repeat(np.expand_dims(self.gradient, self.axis), self.num, axis=self.axis)]
+    
+    def calc_shape(self, a):
+        res = list(a)
+        a = self.axis
+        res = res[:a] + res[a+1:]
+        return tuple(res)
+    
+    def calc_name(self, a):
+        return 'Sum({})'.format(a)
+
+class AvgNode(Node):
+
+    def __init__(self, sess, children, axis, **kwargs):
+        self.axis = axis
+        super().__init__(sess, children, **kwargs)
+
+    def calc_result(self, a):
+        self.num = a.shape[self.axis]
+        return np.average(a, axis=self.axis)
+
+    def calc_gradients(self):
+        return [np.repeat(np.expand_dims(self.gradient, self.axis), self.num, axis=self.axis) / self.num]
     
     def calc_shape(self, a):
         res = list(a)

@@ -51,5 +51,8 @@ def select(a, axis, begin, end):
 def sum(a, axis):
     return SumNode(a.sess, [a], axis)
 
+def avg(a, axis):
+    return AvgNode(a.sess, [a], axis)
+
 def conv2d(a, b):
     return Conv2DNode(a.sess, [a, b])
