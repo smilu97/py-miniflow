@@ -51,9 +51,18 @@ S1 = fl.sigmoid(fl.matmul(S0, V1) + b1)
 E = fl.sum(fl.square(S1 - y), axis=0)
 ```
 
-### [Graph building example2](test/sin.py)
+## Learning Sin Test
 
 ![sin_test](static/sin.gif)
+
+Logistic regression
+
+- 1 Input (x)
+- 1000 HiddenLayer (S0 = tanh(x * W0 + b0))
+- 1000 HiddenLayer (S1 = tanh(x * W1 + b1))
+- 1 Output (S2 = S1 * W2 + b2)
+
+### [Graph building example2](test/sin.py)
 
 ```python
 input_size = 1 # Constant
