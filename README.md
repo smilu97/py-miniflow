@@ -53,6 +53,31 @@ S1 = fl.sigmoid(fl.matmul(S0, V1) + b1)
 E = fl.sum(fl.square(S1 - y), axis=0)
 ```
 
+### [Graph building example2](test/sin.py)
+
+![sin_test](static/sin.gif)
+
+```python
+input_size = 1 # Constant
+h1 = 1000
+h2 = 1000
+output_size = 1 # Constant
+batch_size = 200
+
+sess.fan_in = input_size # For xavier initializer
+sess.fan_out = output_size
+
+x = fl.Placeholder(sess, np.zeros((batch_size, 1)), 'x')
+y = fl.Placeholder(sess, np.zeros((batch_size, 1)), 'y')
+
+S0, W0, b0 = fl.fully_conntected(x, h1, activation=fl.tanh, initializer=fl.xavier_initializer())
+S1, W1, b1 = fl.fully_conntected(S0, h2, activation=fl.tanh, initializer=fl.xavier_initializer())
+S2, W2, b2 = fl.fully_conntected(S1, output_size, activation=None, initializer=fl.xavier_initializer())
+
+y_ = S2
+E = fl.avg(fl.avg(fl.square(y - y_), 0), 0)
+```
+
 ## TODO
 
 - [x] Basic Graph Node

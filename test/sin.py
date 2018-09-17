@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 import pickle
 
-lr = 0.0001
+lr = 0.001
 epoch = 1000
 
 def answer(x, error=0.0):
@@ -99,8 +99,8 @@ def test(train=True):
 
     # call the animator.  blit=True means only re-draw the parts that have changed.
     anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                frames=2000, interval=1, blit=True)
-
-    plt.show()
+                                frames=np.arange(0, 100), interval=10, blit=True)
+                            
+    anim.save('static/sin.gif', dpi=80, writer='imagemagick')
 
     save()
