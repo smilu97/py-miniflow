@@ -9,7 +9,7 @@ class GradientDescentOptimizer:
     def minimize(self, target):
         result = target.get_result()
         self.sess.clean_gradients()
-        target.gradient = np.ones_like(result) * self.lr
+        target.gradient = np.full_like(result, self.lr)
         target.propagate_gradient()
         for node in self.sess.trainable_nodes:
             self.apply_gradient(node)
@@ -30,8 +30,8 @@ class AdamOptimizer(GradientDescentOptimizer):
         # Get previous props
         props = target.initializer_props
         props = {
-            'm': np.zeros((1,)),
-            'v': np.zeros((1,)),
+            'm': 0,
+            'v': 0,
             't': 0
         } if props is None else props
 

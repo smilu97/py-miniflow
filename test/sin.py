@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 import pickle
 
-M = 10
-N = 500
-lr = 0.001
+lr = 0.0001
 epoch = 1000
 
 def answer(x, error=0.0):
@@ -16,21 +14,30 @@ def answer(x, error=0.0):
 def test(train=True):
 
     sess =  fl.Session()
-
-    def initializer(*shape):
-        return (np.random.rand(*shape) * 2 - 1.0) * 1.0
-
+    
     input_size = 1 # Constant
-    h1 = 200
-    h2 = 200
-    output_size = 2 # Constant
+    h1 = 1000
+    h2 = 1000
+    output_size = 1 # Constant
+    batch_size = 200
 
-    W0 = fl.Variable(sess, initializer(input_size, h1))
-    b0 = fl.Variable(sess, np.zeros(h1))
-    W1 = fl.Variable(sess, initializer(h1, h2))
-    b1 = fl.Variable(sess, np.zeros(h2))
-    W2 = fl.Variable(sess, initializer(h2, output_size))
-    b2 = fl.Variable(sess, np.zeros(output_size))
+    sess.fan_in = input_size
+    sess.fan_out = output_size
+
+    x = fl.Placeholder(sess, np.zeros((batch_size, 1)), 'x')
+    y = fl.Placeholder(sess, np.zeros((batch_size, 1)), 'y')
+
+    S0, W0, b0 = fl.fully_conntected(x, h1, activation=fl.tanh, initializer=fl.xavier_initializer())
+    S1, W1, b1 = fl.fully_conntected(S0, h2, activation=fl.tanh, initializer=fl.xavier_initializer())
+    S2, W2, b2 = fl.fully_conntected(S1, output_size, activation=None, initializer=fl.xavier_initializer())
+
+    # p = fl.select(S2, 1, 0, 1)
+    # q = fl.select(S2, 1, 1, 2)
+
+    y_ = S2
+    E = fl.avg(fl.avg(fl.square(y - y_), 0), 0)
+
+    optimizer = fl.AdamOptimizer(sess, lr=lr)
 
     weight_vectors = {
         'W0': W0,
@@ -40,23 +47,6 @@ def test(train=True):
         'W2': W2,
         'b2': b2,
     }
-
-    x = fl.Placeholder(sess, np.zeros((N, 1)), 'x')
-    y = fl.Placeholder(sess, np.zeros((N, 1)), 'y')
-    
-    activation = fl.tanh
-
-    S0 = activation(fl.matmul(x, W0) + b0)
-    S1 = activation(fl.matmul(S0, W1) + b1)
-    S2 = (fl.matmul(S1, W2) + b2)
-
-    p = fl.select(S2, 1, 0, 1)
-    q = fl.select(S2, 1, 1, 2)
-
-    y_ = p / q
-    E = fl.avg(fl.avg(fl.square(y - y_), 0), 0)
-
-    optimizer = fl.AdamOptimizer(sess, lr=lr)
 
     def save():
         fd = open('save.sav', 'wb')
@@ -75,7 +65,7 @@ def test(train=True):
             print('Failed to load')
     
     def train():
-        x.result = np.random.rand(500) * 8 - 4
+        x.result = np.random.rand(batch_size) * 16 - 8
         x.result.sort()
         x.result = np.expand_dims(x.result, 1)
         y.result = answer(x.result)
@@ -114,8 +104,3 @@ def test(train=True):
     plt.show()
 
     save()
-
-    # plt.plot(gx, gy)
-    # plt.plot(gx, ans, 'r--')
-    # plt.show()
-    

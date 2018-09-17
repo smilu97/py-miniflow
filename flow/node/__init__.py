@@ -3,7 +3,7 @@ from flow.node.util import *
 
 class Node:
 
-    def __init__(self, sess, children):
+    def __init__(self, sess, children, trainable=False):
         self.sess = sess
         self.children = children
         self.parentNum = 0
@@ -12,7 +12,7 @@ class Node:
         self.result_version = 0
         self.gradient = None
         self.numGradient = 0
-        self.trainable = False
+        self.trainable = trainable
         self.initializer_props = None
 
         for child in children:
@@ -95,8 +95,7 @@ class Variable(Node):
 
     def __init__(self, sess, value, **kwargs):
         self.result = np.float32(value)
-        super().__init__(sess, [], **kwargs)
-        self.trainable = True
+        super().__init__(sess, [], trainable=True, **kwargs)
     
     def calc_shape(self):
         return self.result.shape
