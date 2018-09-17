@@ -99,8 +99,9 @@ def test(train=True):
 
     # call the animator.  blit=True means only re-draw the parts that have changed.
     anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                frames=np.arange(0, 100), interval=10, blit=True)
+                                frames=np.arange(0, 200), interval=3, blit=True)
                             
-    anim.save('static/sin.gif', dpi=80, writer='imagemagick')
+    plt.show()
+    # anim.save('static/sin.gif', dpi=80, writer='imagemagick')
 
     save()
