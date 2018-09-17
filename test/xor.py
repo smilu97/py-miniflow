@@ -17,13 +17,16 @@ def test():
     x = fl.Placeholder(sess, train_x, 'x')
     
     y = fl.Placeholder(sess, train_y, 'y')
+    
+    def initializer(*shape):
+        return fl.xavier(shape, 2, 2)
 
-    V0 = fl.Variable(sess, fl.xavier(2,2))
-    b0 = fl.Variable(sess, fl.xavier(2))
+    V0 = fl.Variable(sess, initializer(2,2))
+    b0 = fl.Variable(sess, initializer(2))
     S0 = fl.sigmoid(fl.matmul(x, V0) + b0)
 
-    V1 = fl.Variable(sess, fl.xavier(2,1))
-    b1 = fl.Variable(sess, fl.xavier(1))
+    V1 = fl.Variable(sess, initializer(2,1))
+    b1 = fl.Variable(sess, initializer(1))
     S1 = fl.sigmoid(fl.matmul(S0, V1) + b1)
 
     E = fl.sum(fl.square(S1 - y), axis=0)

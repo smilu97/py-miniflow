@@ -1,10 +1,9 @@
 import numpy as np
 
-def xavier(*shape, uniform=False):
-    fan_in = shape[0]
-    fan_out = shape[-1]
+def xavier(shape, fan_in, fan_out, uniform=False):
     x = np.sqrt((6 if uniform else 2) / (fan_in + fan_out))
-    return (np.random.rand if uniform else np.random.randn)(*shape) * x
+    res = (np.random.rand if uniform else np.random.randn)(*shape) * x
+    return res
 
 def shape_broadcast(s0, s1):
     res = []

@@ -21,7 +21,7 @@ class Session:
         
     def clean_gradients(self):
         for node in self.nodes:
-            node.gradient = None
+            node.gradient = 0
             node.numGradient = 0
     
     def apply_gradients(self):

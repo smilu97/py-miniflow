@@ -34,6 +34,9 @@ class Node:
             self.result_version = version
         return self.result
     
+    def get_children_result(self):
+        return (child.get_result(self.result_version) for child in self.children)
+    
     def propagate_gradient(self):
         gradients = self.calc_gradients()
         for idx, child in enumerate(self.children):
@@ -48,7 +51,7 @@ class Node:
                 r = self.result.shape[idx]
                 if r != s and r == 1:
                     gradient = np.sum(gradient, axis=idx)
-        if self.gradient == None:
+        if self.gradient is None:
             self.gradient = gradient
         else:
             self.gradient += gradient
@@ -69,19 +72,34 @@ class Node:
     def calc_shape(self):
         return None
     
+    def check_transform_constant(self, x):
+        if type(x) == (type(0) or type(0.0)):
+            x = Placeholder(self.sess, np.array([x]), str(x))
+        return x
+    
     def __add__(self, a):
+        a = self.check_transform_constant(a)
         return AddNode(self.sess, [self, a])
 
     def __sub__(self, a):
+        a = self.check_transform_constant(a)
         return SubNode(self.sess, [self, a])
     
     def __mul__(self, a):
+        a = self.check_transform_constant(a)
         return MulNode(self.sess, [self, a])
+    
+    def __truediv__(self, a):
+        a = self.check_transform_constant(a)
+        return DivNode(self.sess, [self, a])
+    
+    def __neg__(self):
+        return NegNode(self.sess, [self])
 
 class Variable(Node):
 
     def __init__(self, sess, value, **kwargs):
-        self.result = value
+        self.result = np.float32(value)
         super().__init__(sess, [], **kwargs)
 
     def apply_gradient(self):
@@ -96,7 +114,7 @@ class Variable(Node):
 class Placeholder(Node):
 
     def __init__(self, sess, value, name):
-        self.result = value
+        self.result = np.float32(value)
         self.name = name
         sess.register_placeholder(self)
         super().__init__(sess, [])
@@ -124,6 +142,20 @@ class MatmulNode(Node):
     
     def calc_name(self, a, b):
         return 'Matmul({},{})'.format(a, b)
+
+class NegNode(Node):
+    
+    def calc_result(self, a):
+        return -a
+    
+    def calc_gradients(self):
+        return [-self.gradient]
+    
+    def calc_shape(self, a):
+        return a
+    
+    def calc_name(self, a):
+        return 'Neg({})'.format(a)
 
 class AddNode(Node):
 
@@ -169,12 +201,30 @@ class MulNode(Node):
             array_fit_to_shape(self.gradient * self.children[0].result, self.children[0].shape),
             array_fit_to_shape(self.gradient * self.children[1].result, self.children[1].shape)
         ]
-            
+
     def calc_shape(self, a, b):
         return shape_broadcast(a, b)
             
     def calc_name(self, a, b):
         return 'Mul({},{})'.format(a, b)
+
+class DivNode(Node):
+
+    def calc_result(self, a, b):
+        return a / b
+    
+    def calc_gradients(self):
+        v0, v1 = self.get_children_result()
+        return [
+            array_fit_to_shape(self.gradient / v1, v0.shape),
+            array_fit_to_shape((-v0) / np.square(v1) * self.gradient, v1.shape)
+        ]
+    
+    def calc_shape(self, a, b):
+        return shape_broadcast(a, b)
+    
+    def calc_name(self, a, b):
+        return 'Div({},{})'.format(a, b)
 
 class SigmoidNode(Node):
 
@@ -189,13 +239,28 @@ class SigmoidNode(Node):
     
     def calc_name(self, a):
         return 'Sigmoid({})'.format(a)
+
+class TanhNode(Node):
+
+    def calc_result(self, a):
+        return np.tanh(a)
+    
+    def calc_gradients(self):
+        r = self.result
+        return [(1 - r) * (1 + r) * self.gradient]
+    
+    def calc_shape(self, a):
+        return a
+    
+    def calc_name(self, a):
+        return 'Tanh({})'.format(a)
     
 class ReluNode(Node):
 
     def calc_result(self, a):
         return np.maximum(a, 0)
     
-    def calc_gradient(self):
+    def calc_gradients(self):
         return [(self.result > 0) * self.gradient]
     
     def calc_shape(self, a):
@@ -210,7 +275,7 @@ class SoftmaxNode(Node):
         self.exps = np.exp(a - np.max(a))
         return exps / np.sum(exps)
     
-    def calc_gradient(self):
+    def calc_gradients(self):
         exps = self.exps
         expsum = self.sum(exp)
         expsum2 = expsum ** 2
@@ -227,15 +292,29 @@ class LogNode(Node):
     def calc_result(self, a):
         return np.log(a)
     
-    def calc_gradient(self):
+    def calc_gradients(self):
         v0 = self.children[0].get_result(self.result_version)
-        return [1 / v0]
+        return [(1 / v0) * self.gradient]
     
     def calc_shape(self, a):
         return a
 
     def calc_name(self, a):
         return 'Log({})'.format(a)
+
+class ExpNode(Node):
+
+    def calc_result(self, a):
+        return np.exp(a)
+    
+    def calc_gradients(self):
+        return [self.result * self.gradient]
+    
+    def calc_shape(self, a):
+        return a
+    
+    def calc_name(self, a):
+        return 'Exp({})'.format(a)
     
 class SquareNode(Node):
 
@@ -332,8 +411,8 @@ class SelectNode(Node):
     
     def calc_shape(self, a):
         res = list(a)
-        a[self.axis] = self.end - self.begin
-        return tuple(a)
+        res[self.axis] = self.end - self.begin
+        return tuple(res)
     
     def calc_name(self, a):
         return 'Select({})'.format(a)
@@ -343,7 +422,7 @@ class TransposeNode(Node):
     def calc_result(self, a):
         return a.T
     
-    def calc_gradient(self):
+    def calc_gradients(self):
         return [self.gradient.T]
 
     def calc_shape(self, a):
@@ -358,7 +437,7 @@ class Conv2DNode(Node):
         self.filter_wh = b.shape[2:]
         return mult_conv2d(a, b)
     
-    def calc_gradient(self):
+    def calc_gradients(self):
         g = mult_conv2d_gradient(self.gradient, self.children[0].result, self.filter_wh)
         return [None, g]
     
