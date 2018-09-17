@@ -91,6 +91,7 @@ def test(train=True):
     # animation function.  This is called sequentially
     def animate(i):
         train()
+        train()
         gx = np.sum(x.result, 1)
         gy = np.sum(y_.result, 1)
         line.set_data(gx, gy)
@@ -99,9 +100,9 @@ def test(train=True):
 
     # call the animator.  blit=True means only re-draw the parts that have changed.
     anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                frames=np.arange(0, 200), interval=3, blit=True)
+                                frames=100, interval=80, blit=True)
                             
     plt.show()
-    # anim.save('static/sin.gif', dpi=80, writer='imagemagick')
+    # anim.save('static/sin.gif', fps=30, dpi=80, writer='imagemagick')
 
     save()
