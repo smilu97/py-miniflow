@@ -105,4 +105,4 @@ def test(train=True):
     plt.show()
     # anim.save('static/sin.gif', fps=30, dpi=80, writer='imagemagick')
 
-    save()
+    # save()  # Save the trained weights
