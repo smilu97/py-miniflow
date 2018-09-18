@@ -42,6 +42,9 @@ def exp(a):
 def square(a):
     return SquareNode(a.sess, [a])
 
+def l2loss(a, b):
+    return L2LossNode(a.sess, [a, b])
+
 def transpose(a):
     return TransposeNode(a.sess, [a])
 

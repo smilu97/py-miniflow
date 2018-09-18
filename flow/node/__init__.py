@@ -343,6 +343,27 @@ class SquareNode(Node):
     def calc_name(self, a):
         return 'Square({})'.format(a)
 
+class L2LossNode(Node):
+
+    def calc_result(self, a, b):
+        self.diff = a - b
+        return np.sum(np.square(self.diff) / 2, axis=None)
+    
+    def calc_gradients(self):
+        v0, v1 = self.get_children_result()
+        g = self.diff * self.gradient
+        return [
+            array_fit_to_shape(g, v0.shape),
+            -array_fit_to_shape(-g, v1.shape)
+        ]
+
+    def calc_shape(self, a, b):
+        return (1,)    
+
+    def calc_name(self, a, b):
+        return 'L2Loss({},{})'.format(a, b)
+    
+
 class SumNode(Node):
 
     def __init__(self, sess, children, axis, **kwargs):
