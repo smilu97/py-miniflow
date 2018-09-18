@@ -16,8 +16,8 @@ def test(train=True):
     sess =  fl.Session()
     
     input_size = 1 # Constant
-    h1 = 1000
-    h2 = 1000
+    h1 = 500
+    h2 = 500
     output_size = 1 # Constant
     batch_size = 200
 

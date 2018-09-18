@@ -24,6 +24,9 @@ def sigmoid(a):
 def relu(a):
     return ReluNode(a.sess, [a])
 
+def leaky_relu(a, alpha=0.2):
+    return LeakyReluNode(a.sess, [a], alpha)
+
 def tanh(a):
     return TanhNode(a.sess, [a])
 

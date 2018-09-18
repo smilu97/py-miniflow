@@ -262,6 +262,25 @@ class ReluNode(Node):
     def calc_name(self, a):
         return 'Relu({})'.format(a)
 
+class LeakyReluNode(Node):
+
+    def __init__(self, sess, children, alpha):
+        self.alpha = alpha
+        super().__init__(sess, children)
+
+    def calc_result(self, a, alpha):
+        return np.where(a > 0, a, a * self.alpha)
+    
+    def calc_gradients(self):
+        v0 = self.children[0].get_result(self.result_version)
+        return [np.where(v0 > 0, 1, self.alpha) * self.gradient]
+    
+    def calc_shape(self, a):
+        return a
+    
+    def calc_name(self, a):
+        return 'LRelu({})({})'.format(self.alpha, a)
+
 class SoftmaxNode(Node):
 
     def calc_result(self, a):
