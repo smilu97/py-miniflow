@@ -13,7 +13,8 @@ git clone https://github.com/smilu97/miniflow
 cd miniflow
 virtualenv venv -p python3
 pip install -r requirements.txt
-python test.py
+python test.py sin
+# python test.py xor  # If you want to see xor test
 ```
 
 ## Learning XOR Test
