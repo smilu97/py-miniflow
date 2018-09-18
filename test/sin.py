@@ -1,9 +1,12 @@
 import numpy as np
 import flow as fl
 import progressbar as pb
+import pickle
+
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
-import pickle
 
 lr = 0.001
 epoch = 1000

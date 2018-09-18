@@ -1,4 +1,10 @@
+cycler==0.10.0
+kiwisolver==1.0.1
+matplotlib==2.2.3
 numpy==1.15.1
 progressbar2==3.38.0
+pyparsing==2.2.0
+python-dateutil==2.7.3
 python-utils==2.3.0
+pytz==2018.5
 six==1.11.0

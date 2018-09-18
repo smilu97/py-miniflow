@@ -11,8 +11,9 @@ It may be a very-easy, most basic version of Deep-learning framework
 ```sh
 git clone https://github.com/smilu97/miniflow
 cd miniflow
+virtualenv venv -p python3
 pip install -r requirements.txt
-./test.py
+python test.py
 ```
 
 ## Learning XOR Test
