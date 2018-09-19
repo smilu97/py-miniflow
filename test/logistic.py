@@ -60,13 +60,6 @@ def test():
         optimizer.minimize(E)
         print('E:', E.get_result())
 
-        # qy = y_.get_result()
-        # qy = np.where(qy > 0.5, 1.0, 0.0)
-        # print('Wrong:', np.sum(np.absolute(qy - train_y), axis=None))
-        # print('diff:', np.squeeze(np.absolute(qy - train_y)))
-        # print('qy:', qy)
-        # print('train_y:', train_y)  
-
         x.set_result(test_x)
         test_y = y_.get_result().T[0]
             

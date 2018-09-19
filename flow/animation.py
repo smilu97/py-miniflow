@@ -5,7 +5,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
-def show_animation(x, y, y_, E, optimizer, xlim, ylim, print_error=True):
+def make_animation(x, y, y_, E, optimizer, xlim, ylim, print_error=True, epoch_per_frame=1, **kwargs):
 
     train_x = x.get_result()
     train_y = y.get_result()
@@ -26,20 +26,15 @@ def show_animation(x, y, y_, E, optimizer, xlim, ylim, print_error=True):
     train_scatter = ax.scatter(train_x[:,0], train_x[:,1], c=np.squeeze(train_y))
     
     def anim_update(i):
-        x.set_result(train_x)
-        optimizer.minimize(E)
-        if print_error:
-            print('E:', E.get_result())
-
-        # qy = y_.get_result()
-        # qy = np.where(qy > 0.5, 1.0, 0.0)
-        # print('Wrong:', np.sum(np.absolute(qy - train_y), axis=None))
-        # print('diff:', np.squeeze(np.absolute(qy - train_y)))
-        # print('qy:', qy)
-        # print('train_y:', train_y)  
 
         x.set_result(test_x)
         test_y = y_.get_result().T[0]
+
+        x.set_result(train_x)
+        for _ in range(epoch_per_frame):
+            optimizer.minimize(E)
+        if print_error:
+            print('E:', E.get_result())
             
         red  = []
         blue = []
@@ -56,6 +51,4 @@ def show_animation(x, y, y_, E, optimizer, xlim, ylim, print_error=True):
 
         return blue_scatter, red_scatter, train_scatter
     
-    anim = animation.FuncAnimation(fig, anim_update, interval=1, blit=True)
-
-    plt.show()
+    return animation.FuncAnimation(fig, anim_update, **kwargs)

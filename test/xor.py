@@ -2,6 +2,10 @@ import flow as fl
 import numpy as np
 import progressbar as pb
 
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+
 def test():
 
     sess = fl.Session()
@@ -44,4 +48,9 @@ def test():
         
         print('last error:', E.get_result())
 
-    fl.show_animation(x, y, y_, E, optimizer, (-1, 2), (-1, 2))
+    anim = fl.make_animation(x, y, y_, E, optimizer, (-1, 2), (-1, 2), epoch_per_frame=50, frames=50, interval=80, blit=True)
+
+    if True :
+        plt.show()
+    else:
+        anim.save('static/xor.gif', writer='imagemagick')

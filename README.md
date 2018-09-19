@@ -19,7 +19,7 @@ python test.py sin
 
 ## Learning XOR Test
 
-![xor_test](static/xor_test.png)
+![xor_test](static/xor.gif)
 
 Simple logistic regression
 
