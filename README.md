@@ -95,4 +95,5 @@ E = fl.avg(fl.avg(fl.square(y - y_), 0), 0)
 - [x] Transpose
 - [x] Shape validations
 - [x] Convolution2D
+- [ ] Optimize back-propagation algorithm
 - [ ] MaxPool, AvgPool etc...
