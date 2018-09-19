@@ -1,0 +1,7 @@
+
+# Before start
+
+이 tutorial은 python3문법과 numpy라이브러리에 익숙한 사람들을 대상으로 쓰여져 있습니다.
+
+또한 이 라이브러리에서는 거의 모든 '값'들은 numpy.array를 사용하고 있고, scalar를 사용할 때도 (1,)차원의 numpy.array로 변환하여
+처리되고 있습니다.
