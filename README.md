@@ -56,6 +56,7 @@ E = fl.sum(fl.square(S1 - y), axis=0)
 ## Learning Sin Test
 
 ![sin_test](static/sin.gif)
+![sin_complete](static/sin_complete.png)
 
 Logistic regression
 
