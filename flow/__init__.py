@@ -6,3 +6,4 @@ from flow.optimizer import *
 from flow.initializer import *
 from flow.network import *
 from flow.save import *
+from flow.animation import *
