@@ -7,98 +7,84 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
-train_x = np.array([
-    [1.2, 5.3],
-    [1.1, 5.4],
-    [1.4, 4.5],
-    [1.0, 6.0],
-    [5.3, 1.2],
-    [5.4, 1.1],
-    [4.5, 1.5],
-    [6.0, 1.0]
-])
+def answer(a0):
+    res = []
+    for a in a0:
+        d1 = np.sqrt(np.sum(np.square(a - np.array([3, 3])), axis=None))
+        if d1 < 2.0:
+            res.append(0.0)
+        else:
+            res.append(1.0)
+    return np.expand_dims(np.array(res), 1)
 
-train_y = np.expand_dims(np.array([
-    0, 0, 0, 0, 1, 1, 1, 1
-]), 1)
+train_size = 300
+train_x = np.random.rand(train_size, 2) * 7
+train_y = answer(train_x)
+
+test_x = []
+for i in np.arange(0, 7, 0.1):
+    for j in np.arange(0, 7, 0.1):
+        test_x.append([i, j])
+test_x = np.array(test_x)
 
 epoch = 1000
 
 def test():
 
     sess = fl.Session()
-    sess.fan_in = train_x.shape[-1]
-    sess.fan_out = train_y.shape[-1]
+    sess.fan_in = 3
+    sess.fan_out = 1
 
     x = fl.Placeholder(sess, train_x, 'x')
     y = fl.Placeholder(sess, train_y, 'y')
 
-    S0, W0, b0 = fl.fully_conntected(x, 2, activation=fl.sigmoid, initializer=fl.xavier_initializer())
+    # We can choose to apply kernel to x_input or not
+    x2 = fl.concat(x, fl.square(x), 1)
+    # x2 = x
+
+    S0, W0, b0 = fl.fully_conntected(x2, 30, activation=fl.sigmoid, initializer=fl.xavier_initializer())
     S1, W1, b1 = fl.fully_conntected(S0, 1, activation=fl.sigmoid, initializer=fl.xavier_initializer())
 
     y_ = S1
-    E = fl.l2loss(y_, y)
+    E = fl.l2loss(y, y_)
     optimizer = fl.AdamOptimizer(sess, lr=0.01)
-
-    weight_vectors = {
-        'W0': W0,
-        'b0': b0,
-        'W1': W1,
-        'b1': b1
-    }
-
-    start_error = E.get_result()
-    for _ in pb.progressbar(range(epoch)):
-        optimizer.minimize(E)
-    
-    def get_result(q):
-        a = np.zeros((8, 2))
-        a[0] = np.array(q)
-        x.result = a
-        return y_.get_result()[0,0]
-
-    print('Starting error:', start_error)
-    print('Final error:', E.result)
 
     fig = plt.figure()
     ax = plt.axes(xlim=(0, 7), ylim=(0, 7))
     red_scatter = ax.scatter([], [])
     blue_scatter = ax.scatter([], [])
-    train_x_scatter = ax.scatter(train_x[:4,0], train_x[:4,1])
-    train_y_scatter = ax.scatter(train_x[4:,0], train_x[4:,1])
-
-    def anim_init():
-        red_scatter.set_offsets([])
-        blue_scatter.set_offsets([])
-        return red_scatter, blue_scatter
+    train_scatter = ax.scatter(train_x[:,0], train_x[:,1], c=np.squeeze(train_y))
     
     def anim_update(i):
+        x.set_result(train_x)
         optimizer.minimize(E)
+        print('E:', E.get_result())
 
-        result_x = []
-        result_y = []
-        for i in np.arange(0, 7, 0.1):
-            for j in np.arange(0, 7, 0.1):
-                a = np.array([i, j])
-                result_x.append(a)
-                result_y.append(get_result(a))
+        # qy = y_.get_result()
+        # qy = np.where(qy > 0.5, 1.0, 0.0)
+        # print('Wrong:', np.sum(np.absolute(qy - train_y), axis=None))
+        # print('diff:', np.squeeze(np.absolute(qy - train_y)))
+        # print('qy:', qy)
+        # print('train_y:', train_y)  
+
+        x.set_result(test_x)
+        test_y = y_.get_result().T[0]
             
         red  = []
         blue = []
-        for idx, rex in enumerate(result_x):
-            if result_y[idx] > 0.5:
+        for idx, rex in enumerate(test_x):
+            if test_y[idx] > 0.5:
                 red.append(rex)
             else:
                 blue.append(rex)
-        red = np.array(red)
-        blue = np.array(blue)
 
-        red_scatter.set_offsets(red)
-        blue_scatter.set_offsets(blue)
+        if len(red) > 0:
+            red_scatter.set_offsets(np.array(red))
+        if len(blue) > 0:
+            blue_scatter.set_offsets(np.array(blue))
 
-        return red_scatter, blue_scatter, train_x_scatter, train_y_scatter
+        return blue_scatter, red_scatter, train_scatter
     
-    anim = animation.FuncAnimation(fig, anim_update, init_func=anim_init,
-                                frames=100, interval=80, blit=True)
+    anim = animation.FuncAnimation(fig, anim_update, interval=1, blit=True)
 
     plt.show()

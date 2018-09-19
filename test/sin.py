@@ -68,10 +68,12 @@ def test(train=True):
             print('Failed to load')
     
     def train():
-        x.result = np.random.rand(batch_size) * 16 - 8
-        x.result.sort()
-        x.result = np.expand_dims(x.result, 1)
-        y.result = answer(x.result)
+        qx = np.random.rand(batch_size) * 16 - 8
+        qx.sort()
+        qx = np.expand_dims(qx, 1)
+        qy = answer(qx)
+        x.set_result(qx)
+        y.set_result(qy)
         optimizer.minimize(E)
     
     if False:
@@ -95,8 +97,8 @@ def test(train=True):
     def animate(i):
         train()
         train()
-        gx = np.sum(x.result, 1)
-        gy = np.sum(y_.result, 1)
+        gx = np.sum(x.get_result(), 1)
+        gy = np.sum(y_.get_result(), 1)
         line.set_data(gx, gy)
         print('E:', E.result)
         return line,

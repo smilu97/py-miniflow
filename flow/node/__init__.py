@@ -6,10 +6,10 @@ class Node:
     def __init__(self, sess, children, trainable=False):
         self.sess = sess
         self.children = children
+        self.parents = []
         self.parentNum = 0
         if not hasattr(self, 'result'):
             self.result = None
-        self.result_version = 0
         self.gradient = None
         self.numGradient = 0
         self.trainable = trainable
@@ -17,6 +17,7 @@ class Node:
 
         for child in children:
             child.parentNum += 1
+            child.parents.append(self)
         
         sess.register_node(self)
 
@@ -27,17 +28,17 @@ class Node:
             self.name = self.calc_name(*[child.get_name() for child in self.children])
         return self.name
 
-    def get_result(self, version=None):
-        if version == None:
-            version = self.result_version + 1
-        if self.result_version != version:
-            children_results = [child.get_result(version) for child in self.children]
-            self.result = self.calc_result(*children_results)
-            self.result_version = version
+    def get_result(self):
+        self.result = self.calc_result(*self.get_children_result())
         return self.result
     
+    def set_result(self, value):
+        self.result = value
+        for parent in self.parents:
+            parent.set_result(None)
+    
     def get_children_result(self):
-        return (child.get_result(self.result_version) for child in self.children)
+        return (child.get_result() for child in self.children)
     
     def propagate_gradient(self):
         gradients = self.calc_gradients()
@@ -121,8 +122,8 @@ class MatmulNode(Node):
 
     def calc_gradients(self):
         # ab bc ac
-        v0 = self.children[0].get_result(self.result_version)
-        v1 = self.children[1].get_result(self.result_version)
+        v0 = self.children[0].get_result()
+        v1 = self.children[1].get_result()
         g0 = np.matmul(self.gradient, v1.T)
         g1 = np.matmul(v0.T, self.gradient)
         return [g0, g1]
@@ -253,7 +254,7 @@ class ReluNode(Node):
         return np.maximum(a, 0)
     
     def calc_gradients(self):
-        v0 = self.children[0].get_result(self.result_version)
+        v0 = self.children[0].get_result()
         return [np.heaviside(v0, 0) * self.gradient]
     
     def calc_shape(self, a):
@@ -272,7 +273,7 @@ class LeakyReluNode(Node):
         return np.where(a > 0, a, a * self.alpha)
     
     def calc_gradients(self):
-        v0 = self.children[0].get_result(self.result_version)
+        v0 = self.children[0].get_result()
         return [np.where(v0 > 0, 1, self.alpha) * self.gradient]
     
     def calc_shape(self, a):
@@ -305,7 +306,7 @@ class LogNode(Node):
         return np.log(a)
     
     def calc_gradients(self):
-        v0 = self.children[0].get_result(self.result_version)
+        v0 = self.children[0].get_result()
         return [(1 / v0) * self.gradient]
     
     def calc_shape(self, a):
@@ -334,7 +335,7 @@ class SquareNode(Node):
         return a * a
 
     def calc_gradients(self):
-        v0 = self.children[0].get_result(self.result_version)
+        v0 = self.children[0].get_result()
         return [2 * v0 * self.gradient]
 
     def calc_shape(self, a):
@@ -354,7 +355,7 @@ class L2LossNode(Node):
         g = self.diff * self.gradient
         return [
             array_fit_to_shape(g, v0.shape),
-            -array_fit_to_shape(-g, v1.shape)
+            array_fit_to_shape(-g, v1.shape)
         ]
 
     def calc_shape(self, a, b):
@@ -385,6 +386,26 @@ class SumNode(Node):
     
     def calc_name(self, a):
         return 'Sum({})'.format(a)
+
+class ExpandDimsNode(Node):
+
+    def __init__(self, sess, children, axis, **kwargs):
+        self.axis = axis
+        super().__init__(sess, children, **kwargs)
+    
+    def calc_result(self, a):
+        return np.expand_dims(a, axis=self.axis)
+    
+    def calc_gradients(self):
+        return [np.sum(self.gradient, axis=self.axis)]
+    
+    def calc_shape(self, a):
+        res = list(a)
+        a = self.axis
+        return tuple(res[:a] + [1] + res[a:])
+    
+    def calc_name(self, a):
+        return 'ExpDims({},{})'.format(a, self.axis)
 
 class AvgNode(Node):
 
@@ -418,10 +439,11 @@ class ConcatenateNode(Node):
     def calc_result(self, a, b):
         x = self.axis
         self.alength = a.shape[x]
-        return np.concat(a, b, axis=x)
+        return np.concatenate((a, b), axis=x)
     
     def calc_gradients(self):
         g = self.gradient
+        axis = self.axis
         slices = [slice(None, None) for _ in g.shape]
         slices[axis] = slice(None, self.alength)
         ag = g[tuple(slices)]
