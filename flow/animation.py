@@ -5,7 +5,30 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
-def make_animation(x, y, y_, E, optimizer, xlim, ylim, print_error=True, epoch_per_frame=1, **kwargs):
+def make_animation1d(x, y, y_, E, optimizer, xlim, ylim, answer, print_error=True, epoch_per_frame=1, **kwargs):
+
+    train_x = np.squeeze(x.get_result())
+    train_y = np.squeeze(y.get_result())
+
+    test_x = np.expand_dims(np.arange(xlim[0], xlim[1], (xlim[1] - xlim[0]) / 300), 1)
+    test_y = answer(test_x)
+
+    fig = plt.figure()
+    ax = plt.axes(xlim=xlim, ylim=ylim)
+    line, = ax.plot([], [], lw=2)
+    ans, = ax.plot(test_x, test_y)
+
+    def animate(i):
+        for _ in range(epoch_per_frame):
+            optimizer.minimize(E)
+        if print_error:
+            print('E:', E.result)
+        line.set_data(train_x, np.squeeze(y_.get_result()))
+        return line,
+
+    return animation.FuncAnimation(fig, animate, **kwargs)
+
+def make_animation2d(x, y, y_, E, optimizer, xlim, ylim, print_error=True, epoch_per_frame=1, **kwargs):
 
     train_x = x.get_result()
     train_y = y.get_result()

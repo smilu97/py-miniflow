@@ -21,14 +21,6 @@ train_size = 300
 train_x = np.random.rand(train_size, 2) * 7
 train_y = answer(train_x)
 
-test_x = []
-for i in np.arange(0, 7, 0.1):
-    for j in np.arange(0, 7, 0.1):
-        test_x.append([i, j])
-test_x = np.array(test_x)
-
-epoch = 1000
-
 def test():
 
     sess = fl.Session()
@@ -49,35 +41,5 @@ def test():
     E = fl.l2loss(y, y_)
     optimizer = fl.AdamOptimizer(sess, lr=0.01)
 
-    fig = plt.figure()
-    ax = plt.axes(xlim=(0, 7), ylim=(0, 7))
-    red_scatter = ax.scatter([], [])
-    blue_scatter = ax.scatter([], [])
-    train_scatter = ax.scatter(train_x[:,0], train_x[:,1], c=np.squeeze(train_y))
-    
-    def anim_update(i):
-        x.set_result(train_x)
-        optimizer.minimize(E)
-        print('E:', E.get_result())
-
-        x.set_result(test_x)
-        test_y = y_.get_result().T[0]
-            
-        red  = []
-        blue = []
-        for idx, rex in enumerate(test_x):
-            if test_y[idx] > 0.5:
-                red.append(rex)
-            else:
-                blue.append(rex)
-
-        if len(red) > 0:
-            red_scatter.set_offsets(np.array(red))
-        if len(blue) > 0:
-            blue_scatter.set_offsets(np.array(blue))
-
-        return blue_scatter, red_scatter, train_scatter
-    
-    anim = animation.FuncAnimation(fig, anim_update, interval=1, blit=True)
-
+    anim = fl.make_animation2d(x, y, y_, E, optimizer, (0, 7), (0, 7), interval=1, blit=True)
     plt.show()

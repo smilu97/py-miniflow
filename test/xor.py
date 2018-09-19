@@ -48,7 +48,7 @@ def test():
         
         print('last error:', E.get_result())
 
-    anim = fl.make_animation(x, y, y_, E, optimizer, (-1, 2), (-1, 2), epoch_per_frame=50, frames=50, interval=80, blit=True)
+    anim = fl.make_animation2d(x, y, y_, E, optimizer, (-1, 2), (-1, 2), epoch_per_frame=50, frames=50, interval=80, blit=True)
 
     if True :
         plt.show()
