@@ -24,8 +24,14 @@ def sigmoid(a):
 def relu(a):
     return ReluNode(a.sess, [a])
 
+def relu_grad(a):
+    return ReluGradNode(a.sess, [a])
+
 def leaky_relu(a, alpha=0.2):
     return LeakyReluNode(a.sess, [a], alpha)
+
+def leaky_relu_grad(a, grad, alpha=0.2):
+    return LeakyReluGradNode(a.sess, [a, grad], alpha)
 
 def tanh(a):
     return TanhNode(a.sess, [a])
@@ -33,8 +39,14 @@ def tanh(a):
 def softmax(a):
     return SoftmaxNode(a.sess, [a])
 
+def softmax_grad(a, grad):
+    return SoftmaxGradNode(a.sess, [a, grad])
+
 def log(a):
     return LogNode(a.sess, [a])
+
+def log_grad(a, grad):
+    return LogGradNode(a.sess, [a, grad])
 
 def exp(a):
     return ExpNode(a.sess, [a])
@@ -53,6 +65,9 @@ def concat(a, b, axis=0):
 
 def select(a, axis, begin, end):
     return SelectNode(a.sess, [a], axis, begin, end)
+
+def reduce_shape(a, shape):
+    return ReduceShapeNode(a.sess, [a], shape)
 
 def sum(a, axis):
     return SumNode(a.sess, [a], axis)
