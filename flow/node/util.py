@@ -61,6 +61,7 @@ def mult_conv2d(data, filters):
     f_shape = filters.shape # [out_channel, in_channel, filter_width, filter_height]
     # [batch_size, width - f_width + 1, height - f_height + 1, in_channel, filter_width, filter_height]
     m_shape = (d_shape[0], d_shape[2] - f_shape[2] + 1, d_shape[3] - f_shape[3] + 1, d_shape[1], f_shape[2], f_shape[3])
+    # m_shape: (batch_size, shrink_width, shrink_height, in_channel, filter_width, filter_height)
     m_strides = (d_strides[0], d_strides[2], d_strides[3], d_strides[1], d_strides[2], d_strides[3])
     m = np.lib.stride_tricks.as_strided(data, shape = m_shape, strides = m_strides)
     # [batch_size, out_channel, width - filter_width + 1, height - filter_height + 1]

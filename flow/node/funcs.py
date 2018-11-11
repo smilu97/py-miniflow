@@ -60,6 +60,9 @@ def sum(a, axis):
 def expand_dims(a, axis):
     return ExpandDimsNode(a.sess, [a], axis)
 
+def reshape(a, shape):
+    return ReshapeNode(a.sess, [a], shape)
+
 def avg(a, axis):
     return AvgNode(a.sess, [a], axis)
 

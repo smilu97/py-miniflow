@@ -286,11 +286,11 @@ class SoftmaxNode(Node):
 
     def calc_result(self, a):
         self.exps = np.exp(a - np.max(a))
-        return exps / np.sum(exps)
+        return self.exps / np.sum(self.exps)
     
     def calc_gradients(self):
         exps = self.exps
-        expsum = self.sum(exp)
+        expsum = np.sum(exps)
         expsum2 = expsum ** 2
         return [exps * (self.gradient + np.sum(-exps / expsum2 * self.gradient))]
     
@@ -406,6 +406,25 @@ class ExpandDimsNode(Node):
     
     def calc_name(self, a):
         return 'ExpDims({},{})'.format(a, self.axis)
+
+class ReshapeNode(Node):
+
+    def __init__(self, sess, children, target_shape, **kwargs):
+        self.target_shape = target_shape
+        super().__init__(sess, children, **kwargs)
+    
+    def calc_result(self, a):
+        self.orig_shape = a.shape
+        return np.reshape(a, self.target_shape)
+    
+    def calc_gradients(self):
+        return np.reshape(self.gradient, self.orig_shape)
+    
+    def calc_shape(self, a):
+        return self.target_shape
+    
+    def calc_name(self, a):
+        return 'Reshape({},{})'.format(a, self.target_shape)
 
 class AvgNode(Node):
 

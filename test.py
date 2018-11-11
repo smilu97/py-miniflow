@@ -4,11 +4,13 @@ import sys
 from test.sin import test as sin_test
 from test.xor import test as xor_test
 from test.logistic import test as logistic_test
+from test.mnist_cnn import test as mnist_test
 
 tests = [
     ['sin', sin_test],
     ['xor', xor_test],
-    ['logistic', logistic_test]
+    ['logistic', logistic_test],
+    ['mnist', mnist_test],
 ]
 
 if len(sys.argv) > 1:

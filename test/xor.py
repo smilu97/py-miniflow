@@ -54,3 +54,4 @@ def test():
         plt.show()
     else:
         anim.save('static/xor.gif', writer='imagemagick')
+        
