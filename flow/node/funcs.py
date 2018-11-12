@@ -135,12 +135,11 @@ def gradients(ys, xs):
     for y in ys: y.grad_cache = ones(y.sess, y.shape)
 
     def calc_back_grad(x):
-        xc = x.__class__
         if len(x.children) == 0:
             return
-        if not hasattr(xc, 'calc_gradients'):
+        if not hasattr(x, 'calc_gradients'):
             raise Exception('Cannot calc grad from {}'.format(x.name))
-        grads = xc.calc_gradients(x, x.grad_cache)
+        grads = x.calc_gradients(x.grad_cache)
         for idx, child in enumerate(x.children):
             if child.grad_cache is None:
                 child.grad_cache = grads[idx]

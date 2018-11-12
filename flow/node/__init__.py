@@ -120,7 +120,6 @@ class MatmulNode(Node):
     def calc_result(self, a, b):
         return np.matmul(a, b)
 
-    @staticmethod
     def calc_gradients(op, grad):
         v0, v1 = op.children
         v0 = fl.transpose(v0)
@@ -140,7 +139,6 @@ class NegNode(Node):
     def calc_result(self, a):
         return -a
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [-grad]
     
@@ -155,7 +153,6 @@ class AddNode(Node):
     def calc_result(self, a, b):
         return a + b
 
-    @staticmethod
     def calc_gradients(op, grad):
         return [
             fl.reduce_shape(grad, op.children[0].shape),
@@ -173,7 +170,6 @@ class SubNode(Node):
     def calc_result(self, a, b):
         return a - b
 
-    @staticmethod
     def calc_gradients(op, grad):
         return [
             fl.reduce_shape(grad, op.children[0].shape),
@@ -191,7 +187,6 @@ class MulNode(Node):
     def calc_result(self, a, b):
         return a * b
     
-    @staticmethod
     def calc_gradients(op, grad):
         v0, v1 = op.children
         return [
@@ -210,7 +205,6 @@ class DivNode(Node):
     def calc_result(self, a, b):
         return a / b
     
-    @staticmethod
     def calc_gradients(op, grad):
         v0, v1 = op.children
         return [
@@ -229,7 +223,6 @@ class SigmoidNode(Node):
     def calc_result(self, a):
         return 1.0 / (1 + np.exp(-a))
 
-    @staticmethod
     def calc_gradients(op, grad):
         return [op * (1 - op) * grad]
     
@@ -244,7 +237,6 @@ class TanhNode(Node):
     def calc_result(self, a):
         return np.tanh(a)
     
-    @staticmethod
     def calc_gradients(op, grad):
         r = fl.tanh(op.children[0])
         return [(1 - r) * (1 + r) * grad]
@@ -260,7 +252,6 @@ class ReluNode(Node):
     def calc_result(self, a):
         return np.maximum(a, 0)
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [fl.relu_grad(op.children[0], grad)]
     
@@ -287,7 +278,6 @@ class LeakyReluNode(Node):
         self.alpha = alpha
         super().__init__(sess, children)
 
-    @staticmethod
     def calc_result(op, grad):
         return [fl.leaky_relu_grad(op.children[0], grad, op.alpha)]
     
@@ -322,7 +312,6 @@ class SoftmaxNode(Node):
         self.exps = np.exp(a - np.max(a))
         return self.exps / np.sum(self.exps)
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [fl.softmax_grad(op.children[0], grad)]
     
@@ -351,7 +340,6 @@ class LogNode(Node):
     def calc_result(self, a):
         return np.log(a)
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [fl.log_grad(op.children[0], grad)]
     
@@ -377,7 +365,6 @@ class ExpNode(Node):
     def calc_result(self, a):
         return np.exp(a)
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [fl.exp(op.children[0]) * grad]
     
@@ -392,7 +379,6 @@ class SquareNode(Node):
     def calc_result(self, a):
         return a * a
 
-    @staticmethod
     def calc_gradients(op, grad):
         return [op.children[0] * grad * 2]
 
@@ -408,7 +394,6 @@ class L2LossNode(Node):
         self.diff = a - b
         return np.sum(np.square(self.diff) / 2, axis=None)
     
-    @staticmethod
     def calc_gradients(op, grad):
         v0, v1 = op.children
         g = (v0 - v1) * grad
@@ -448,7 +433,6 @@ class SumNode(Node):
     def calc_result(self, a):
         return np.sum(a, axis=self.axis)
 
-    @staticmethod
     def calc_gradients(op, grad):
         return [fl.repeat(fl.expand_dims(grad, op.axis), op.axis, op.num)]
     
@@ -471,7 +455,6 @@ class RepeatNode(Node):
     def calc_result(self, a):
         return np.repeat(a, self.count, axis=self.axis)
     
-    @staticmethod
     def calc_gradients(op, grad):
         return fl.fold(grad, op.axis, grad.shape[op.axis] / op.count)
     
@@ -505,7 +488,6 @@ class FoldNode(Node):
         m = as_strided(a, tuple(m_shape) + (fold_cnt,), a.strides + (a.strides[axis],))
         return np.sum(m, axis=-1)
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [fl.repeat(grad, op.axis, op.fold_cnt)]
     
@@ -527,7 +509,6 @@ class ExpandDimsNode(Node):
     def calc_result(self, a):
         return np.expand_dims(a, axis=self.axis)
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [fl.squeeze(grad, op.axis)]
     
@@ -548,7 +529,6 @@ class SqueezeNode(Node):
     def calc_result(self, a):
         return np.squeeze(a, axis=self.axis)
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [fl.expand_dims(grad, op.axis)]
     
@@ -570,7 +550,6 @@ class ReshapeNode(Node):
         self.orig_shape = a.shape
         return np.reshape(a, self.target_shape)
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [fl.reshape(grad, op.orig_shape)]
     
@@ -590,7 +569,6 @@ class AvgNode(Node):
     def calc_result(self, a):
         return np.average(a, axis=self.axis)
 
-    @staticmethod
     def calc_gradients(op, grad):
         return [fl.repeat(fl.expand_dims(grad, op.axis), op.axis, op.num) / op.num]
     
@@ -624,7 +602,6 @@ class ConcatenateNode(Node):
         self.alength = a.shape[x]
         return np.concatenate((a, b), axis=x)
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [grad[op.selector_a], grad[op.selector_b]]
     
@@ -651,7 +628,6 @@ class SelectNode(Node):
     def calc_result(self, a):
         return a[self.slices]
     
-    @staticmethod
     def calc_gradients(op, grad):
         g = np.zeros(op.ashape)
         g[op.slices] = grad
@@ -669,7 +645,6 @@ class TransposeNode(Node):
     def calc_result(self, a):
         return a.T
     
-    @staticmethod
     def calc_gradients(op, grad):
         return [grad.T]
 
@@ -685,7 +660,6 @@ class Conv2DNode(Node):
         self.filter_wh = b.shape[2:]
         return mult_conv2d(a, b)
     
-    @staticmethod
     def calc_gradients(op, grad):
         g = fl.conv2d_gradient(grad, op.children[0], self.filter_wh)
         return [None, g]
