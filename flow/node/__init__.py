@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.lib.stride_tricks import as_strided
 from flow.node.util import *
 from flow.node.funcs import *
 
@@ -95,6 +96,9 @@ class Node:
     
     def __neg__(self):
         return NegNode(self.sess, [self])
+    
+    def __getitem__(self, key):
+        return SelectNode(self.sess, [self], key)
 
 class Variable(Node):
 
@@ -432,7 +436,7 @@ class ReduceShapeNode(Node):
 
     def __init__(self, sess, children, shape, **kwargs):
         self.shape = shape
-        super().__init__(sess, children, **kwargs)   
+        super().__init__(sess, children, **kwargs)
 
     def calc_result(self, a):
         return array_fit_to_shape(a, self.shape)
@@ -455,7 +459,7 @@ class SumNode(Node):
 
     @staticmethod
     def calc_gradients(op, grad):
-        return [fl.repeat(fl.expand_dims(grad, op.axis), op.num, axis=op.axis)]
+        return [fl.repeat(fl.expand_dims(grad, op.axis), op.axis, op.num)]
     
     def calc_shape(self, a):
         res = list(a)
@@ -476,9 +480,9 @@ class RepeatNode(Node):
     def calc_result(self, a):
         return np.repeat(a, self.count, axis=self.axis)
     
-    # @staticmethod
-    # def calc_gradients(op, grad):
-    #     return None
+    @staticmethod
+    def calc_gradients(op, grad):
+        return fl.fold(grad, op.axis, grad.shape[op.axis] / op.count)
     
     def calc_shape(self, a):
         res = list(a)
@@ -488,6 +492,39 @@ class RepeatNode(Node):
     
     def calc_name(self, a, count, axis):
         return 'Repeat({},{},{})'.format(a, count, axis)
+    
+class FoldNode(Node):
+
+    def __init__(self, sess, children, axis, num, **kwargs):
+        if children[0].shape[axis] % num != 0:
+            raise Exception('Not foldable')
+        
+        self.axis = axis
+        self.num = num
+        self.fold_cnt = children[0].shape[axis] / num
+    
+    def calc_result(self, a):
+        axis = self.axis
+        num = self.num
+        fold_cnt = self.fold_cnt
+        
+        m_shape = list(a.shape)
+        m_shape[axis] = num
+
+        m = as_strided(a, tuple(m_shape) + (fold_cnt,), a.strides + (a.strides[axis],))
+        return np.sum(m, axis=-1)
+    
+    @staticmethod
+    def calc_gradients(op, grad):
+        return [fl.repeat(grad, op.axis, op.fold_cnt)]
+    
+    def calc_shape(self, a):
+        res = list(a)
+        res[self.axis] = self.num
+        return tuple(res)
+    
+    def calc_name(self, a):
+        return 'Fold({})'.format(a)
 
 
 class ExpandDimsNode(Node):
@@ -501,7 +538,7 @@ class ExpandDimsNode(Node):
     
     @staticmethod
     def calc_gradients(op, grad):
-        return [fl.sum(grad, op.axis)]
+        return [fl.squeeze(grad, op.axis)]
     
     def calc_shape(self, a):
         res = list(a)
@@ -510,6 +547,27 @@ class ExpandDimsNode(Node):
     
     def calc_name(self, a):
         return 'ExpDims({},{})'.format(a, self.axis)
+
+class SqueezeNode(Node):
+
+    def __init__(self, sess, children, axis, **kwargs):
+        self.axis = axis
+        super().__init__(sess, children, **kwargs)
+    
+    def calc_result(self, a):
+        return np.squeeze(a, axis=self.axis)
+    
+    @staticmethod
+    def calc_gradients(op, grad):
+        return [fl.expand_dims(grad, op.axis)]
+    
+    def calc_shape(self, a):
+        res = list(a)
+        del res[self.axis]
+        return tuple(res)
+    
+    def calc_name(self, a):
+        return 'Squeeze({})'.format(a)
 
 class ReshapeNode(Node):
 
@@ -523,7 +581,7 @@ class ReshapeNode(Node):
     
     @staticmethod
     def calc_gradients(op, grad):
-        return fl.reshape(grad, op.orig_shape)
+        return [fl.reshape(grad, op.orig_shape)]
     
     def calc_shape(self, a):
         return self.target_shape
@@ -535,30 +593,39 @@ class AvgNode(Node):
 
     def __init__(self, sess, children, axis, **kwargs):
         self.axis = axis
+        self.num = children[0].shape[axis]
         super().__init__(sess, children, **kwargs)
 
     def calc_result(self, a):
-        self.num = a.shape[self.axis]
         return np.average(a, axis=self.axis)
 
     @staticmethod
     def calc_gradients(op, grad):
-        return [fl.repeat(fl.expand_dims(grad, op.axis), op.num, axis=op.axis) / op.num]
+        return [fl.repeat(fl.expand_dims(grad, op.axis), op.axis, op.num) / op.num]
     
     def calc_shape(self, a):
         res = list(a)
-        a = self.axis
-        res = res[:a] + res[a+1:]
+        x = self.axis
+        res = res[:x] + res[x+1:]
         return tuple(res)
     
     def calc_name(self, a):
-        return 'Sum({})'.format(a)
+        return 'Avg({})'.format(a)
 
 class ConcatenateNode(Node):
 
     def __init__(self, sess, children, axis=0, **kwargs):
         self.axis = axis
         self.alength = None
+
+        ashape = children[0].shape
+        sa = [slice(None,None,None) for _ in ashape]
+        sb = list(sa)
+        sa[axis] = slice(None, ashape[axis], None)
+        sb[axis] = slice(ashape[axis], None, None)
+        self.selector_a = sa
+        self.selector_b = sb
+
         super().__init__(sess, children, **kwargs)
      
     def calc_result(self, a, b):
@@ -566,16 +633,9 @@ class ConcatenateNode(Node):
         self.alength = a.shape[x]
         return np.concatenate((a, b), axis=x)
     
-    # @staticmethod
-    # def calc_gradients(op, grad):
-    #     g = self.gradient
-    #     axis = self.axis
-    #     slices = [slice(None, None) for _ in g.shape]
-    #     slices[axis] = slice(None, self.alength)
-    #     ag = g[tuple(slices)]
-    #     slices[axis] = slice(self.alength, None)
-    #     bg = g[tuple(slices)]
-    #     return [ag, bg]
+    @staticmethod
+    def calc_gradients(op, grad):
+        return [grad[op.selector_a], grad[op.selector_b]]
     
     def calc_shape(self, a, b):
         if len(a) != len(b):
@@ -592,30 +652,23 @@ class ConcatenateNode(Node):
 
 class SelectNode(Node):
 
-    def __init__(self, sess, children, axis, begin, end, **kwargs):
-        self.axis = axis
-        self.begin = begin
-        self.end = end
-        self.slices = None
-        self.ashape = None
+    def __init__(self, sess, children, slices, **kwargs):
+        self.slices = slices
+        self.ashape = children[0].shape
         super().__init__(sess, children, **kwargs)
     
     def calc_result(self, a):
-        if self.slices is None:
-            self.slices = [slice(None, None) for _ in a.shape]
-            self.slices[self.axis] = slice(self.begin, self.end)
-            self.ashape = a.shape
-        return a[tuple(self.slices)]
+        return a[self.slices]
     
-    def calc_gradients(self):
-        g = np.zeros(self.ashape)
-        g[tuple(self.slices)] = self.gradient
+    @staticmethod
+    def calc_gradients(op, grad):
+        g = np.zeros(op.ashape)
+        g[op.slices] = grad
         return [g]
     
     def calc_shape(self, a):
-        res = list(a)
-        res[self.axis] = self.end - self.begin
-        return tuple(res)
+        # TODO: advance it
+        return np.empty(a)[self.slices].shape
     
     def calc_name(self, a):
         return 'Select({})'.format(a)
@@ -625,8 +678,9 @@ class TransposeNode(Node):
     def calc_result(self, a):
         return a.T
     
-    def calc_gradients(self):
-        return [self.gradient.T]
+    @staticmethod
+    def calc_gradients(op, grad):
+        return [grad.T]
 
     def calc_shape(self, a):
         return a[::-1]
@@ -640,8 +694,9 @@ class Conv2DNode(Node):
         self.filter_wh = b.shape[2:]
         return mult_conv2d(a, b)
     
-    def calc_gradients(self):
-        g = mult_conv2d_gradient(self.gradient, self.children[0].result, self.filter_wh)
+    @staticmethod
+    def calc_gradients(op, grad):
+        g = fl.conv2d_gradient(grad, op.children[0], self.filter_wh)
         return [None, g]
     
     def calc_shape(self, a, b):
@@ -651,3 +706,18 @@ class Conv2DNode(Node):
     
     def calc_name(self, a, b):
         return 'Conv2D({},{})'.format(a, b)
+
+class Conv2DGradientNode(Node):
+
+    def __init__(self, sess, children, filter_wh, **kwargs):
+        self.filter_wh = filter_wh
+        super().__init__(sess, children, **kwargs)
+
+    def calc_result(self, grad, a):
+        return mult_conv2d_gradient(grad, a, self.filter_wh)
+    
+    def calc_shape(self, a, b):
+        return (grad[1], a[1], self.filter_wh[0], self.filter_wh[1])
+    
+    def calc_name(self, a, b):
+        return 'Conv2DGrad({},{})'.format(a, b)
