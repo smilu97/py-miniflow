@@ -5,13 +5,14 @@ from flow.node.funcs import *
 
 class Node:
 
-    def __init__(self, sess, children, trainable=False):
+    def __init__(self, sess, children, trainable=False, name=None):
         self.sess = sess
         self.children = children
         self.parents = []
         self.parentNum = 0
         if not hasattr(self, 'result'):
             self.result = None
+        self.placeholder = False
         self.gradient = None
         self.numGradient = 0
         self.trainable = trainable
@@ -24,6 +25,7 @@ class Node:
         sess.register_node(self)
 
         self.shape = self.calc_shape(*[child.shape for child in children])
+        self.name = self.get_name() if name is None else name
     
     def get_name(self):
         if (not hasattr(self, 'name')) or self.name is None:
@@ -41,25 +43,6 @@ class Node:
     
     def get_children_result(self):
         return (child.get_result() for child in self.children)
-    
-    # def propagate_gradient(self):
-    #     gradients = self.calc_gradients()
-    #     for idx, child in enumerate(self.children):
-    #         child.add_gradient(gradients[idx])
-    #         child.numGradient += 1
-    #         if child.numGradient >= child.parentNum:
-    #             child.propagate_gradient()
-    
-    # def add_gradient(self, gradient):
-    #     if self.result.shape != gradient.shape:
-    #         for idx, s in enumerate(gradient.shape):
-    #             r = self.result.shape[idx]
-    #             if r != s and r == 1:
-    #                 gradient = np.sum(gradient, axis=idx)
-    #     if self.gradient is None:
-    #         self.gradient = gradient
-    #     else:
-    #         self.gradient += gradient
     
     def calc_result(self):
         return self.result
@@ -126,6 +109,7 @@ class Placeholder(Node):
         self.name = name
         sess.register_placeholder(self)
         super().__init__(sess, [])
+        self.placeholder = True
     
     def calc_shape(self):
         return self.result.shape
@@ -148,7 +132,7 @@ class MatmulNode(Node):
         return (a[0], b[1])
     
     def calc_name(self, a, b):
-        return 'Matmul({},{})'.format(a, b)
+        return '({} @ {})'.format(a, b)
 
 class NegNode(Node):
     
@@ -163,7 +147,7 @@ class NegNode(Node):
         return a
     
     def calc_name(self, a):
-        return 'Neg({})'.format(a)
+        return '(-{})'.format(a)
 
 class AddNode(Node):
 
@@ -199,7 +183,7 @@ class SubNode(Node):
         return shape_broadcast(a, b)
     
     def calc_name(self, a, b):
-        return 'Sub({},{})'.format(a, b)
+        return '({} - {})'.format(a, b)
 
 class MulNode(Node):
 
@@ -237,7 +221,7 @@ class DivNode(Node):
         return shape_broadcast(a, b)
     
     def calc_name(self, a, b):
-        return 'Div({},{})'.format(a, b)
+        return '({} / {})'.format(a, b)
 
 class SigmoidNode(Node):
 
@@ -246,8 +230,7 @@ class SigmoidNode(Node):
 
     @staticmethod
     def calc_gradients(op, grad):
-        r = fl.sigmoid(op.children[0])
-        return [r * (1 - r) * grad]
+        return [op * (1 - op) * grad]
     
     def calc_shape(self, a):
         return a

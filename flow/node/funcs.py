@@ -19,101 +19,101 @@ def ones_like(sess, a, name='ones'):
 def empty_like(sess, a, name='empty'):
     return fl.Placeholder(sess, np.empty_like(a.shape), name)
 
-def matmul(a, b):
-    return fl.MatmulNode(a.sess, [a, b])
+def matmul(a, b, name=None):
+    return fl.MatmulNode(a.sess, [a, b], name=name)
 
-def neg(a):
-    return fl.NegNode(a.sess, [a])
+def neg(a, name=None):
+    return fl.NegNode(a.sess, [a], name=name)
 
-def add(a, b):
-    return fl.AddNode(a.sess, [a, b])
+def add(a, b, name=None):
+    return fl.AddNode(a.sess, [a, b], name=name)
 
-def sub(a, b):
-    return fl.SubNode(a.sess, [a, b])
+def sub(a, b, name=None):
+    return fl.SubNode(a.sess, [a, b], name=name)
 
-def mul(a, b):
-    return fl.MulNode(a.sess, [a, b])
+def mul(a, b, name=None):
+    return fl.MulNode(a.sess, [a, b], name=name)
 
-def div(a, b):
-    return fl.DivNode(a.sess, [a, b])
+def div(a, b, name=None):
+    return fl.DivNode(a.sess, [a, b], name=name)
 
-def sigmoid(a):
-    return fl.SigmoidNode(a.sess, [a])
+def sigmoid(a, name=None):
+    return fl.SigmoidNode(a.sess, [a], name=name)
 
-def relu(a):
-    return fl.ReluNode(a.sess, [a])
+def relu(a, name=None):
+    return fl.ReluNode(a.sess, [a], name=name)
 
-def relu_grad(a):
-    return fl.ReluGradNode(a.sess, [a])
+def relu_grad(a, name=None):
+    return fl.ReluGradNode(a.sess, [a], name=name)
 
-def leaky_relu(a, alpha=0.2):
-    return fl.LeakyReluNode(a.sess, [a], alpha)
+def leaky_relu(a, alpha=0.2, name=None):
+    return fl.LeakyReluNode(a.sess, [a], alpha, name=name)
 
-def leaky_relu_grad(a, grad, alpha=0.2):
-    return fl.LeakyReluGradNode(a.sess, [a, grad], alpha)
+def leaky_relu_grad(a, grad, alpha=0.2, name=None):
+    return fl.LeakyReluGradNode(a.sess, [a, grad], alpha, name=name)
 
-def tanh(a):
-    return fl.TanhNode(a.sess, [a])
+def tanh(a, name=None):
+    return fl.TanhNode(a.sess, [a], name=name)
 
-def softmax(a):
-    return fl.SoftmaxNode(a.sess, [a])
+def softmax(a, name=None):
+    return fl.SoftmaxNode(a.sess, [a], name=name)
 
-def softmax_grad(a, grad):
-    return fl.SoftmaxGradNode(a.sess, [a, grad])
+def softmax_grad(a, grad, name=None):
+    return fl.SoftmaxGradNode(a.sess, [a, grad], name=name)
 
-def log(a):
-    return fl.LogNode(a.sess, [a])
+def log(a, name=None):
+    return fl.LogNode(a.sess, [a], name=name)
 
-def log_grad(a, grad):
-    return fl.LogGradNode(a.sess, [a, grad])
+def log_grad(a, grad, name=None):
+    return fl.LogGradNode(a.sess, [a, grad], name=name)
 
-def exp(a):
-    return fl.ExpNode(a.sess, [a])
+def exp(a, name=None):
+    return fl.ExpNode(a.sess, [a], name=name)
 
-def square(a):
-    return fl.SquareNode(a.sess, [a])
+def square(a, name=None):
+    return fl.SquareNode(a.sess, [a], name=name)
 
-def l2loss(a, b):
-    return fl.L2LossNode(a.sess, [a, b])
+def l2loss(a, b, name=None):
+    return fl.L2LossNode(a.sess, [a, b], name=name)
 
-def transpose(a):
-    return fl.TransposeNode(a.sess, [a])
+def transpose(a, name=None):
+    return fl.TransposeNode(a.sess, [a], name=name)
 
-def concat(a, b, axis=0):
-    return fl.ConcatenateNode(a.sess, [a, b], axis)
+def concat(a, b, axis=0, name=None):
+    return fl.ConcatenateNode(a.sess, [a, b], axis, name=name)
 
-def fold(a, axis, num):
-    return fl.FoldNode(a.sess, [a], axis, num)
+def fold(a, axis, num, name=None):
+    return fl.FoldNode(a.sess, [a], axis, num, name=name)
 
-def repeat(a, axis, count):
-    return fl.RepeatNode(a.sess, [a], axis, count)
+def repeat(a, axis, count, name=None):
+    return fl.RepeatNode(a.sess, [a], axis, count, name=name)
 
-def select(a, key):
-    return fl.SelectNode(a.sess, [a], key)
+def select(a, key, name=None):
+    return fl.SelectNode(a.sess, [a], key, name=name)
 
-def reduce_shape(a, shape):
-    return fl.ReduceShapeNode(a.sess, [a], shape)
+def reduce_shape(a, shape, name=None):
+    return fl.ReduceShapeNode(a.sess, [a], shape, name=name)
 
-def sum(a, axis):
-    return fl.SumNode(a.sess, [a], axis)
+def sum(a, axis, name=None):
+    return fl.SumNode(a.sess, [a], axis, name=name)
 
-def expand_dims(a, axis):
-    return fl.ExpandDimsNode(a.sess, [a], axis)
+def expand_dims(a, axis, name=None):
+    return fl.ExpandDimsNode(a.sess, [a], axis, name=name)
 
-def squeeze(a, axis):
-    return fl.SqueezeNode(a.sess, [a], axis)
+def squeeze(a, axis, name=None):
+    return fl.SqueezeNode(a.sess, [a], axis, name=name)
 
-def reshape(a, shape):
-    return fl.ReshapeNode(a.sess, [a], shape)
+def reshape(a, shape, name=None):
+    return fl.ReshapeNode(a.sess, [a], shape, name=name)
 
-def avg(a, axis):
-    return fl.AvgNode(a.sess, [a], axis)
+def avg(a, axis, name=None):
+    return fl.AvgNode(a.sess, [a], axis, name=name)
 
-def conv2d(a, b):
-    return fl.Conv2DNode(a.sess, [a, b])
+def conv2d(a, b, name=None):
+    return fl.Conv2DNode(a.sess, [a, b], name=name)
 
-def conv2d_grad(grad, b, filter_wh):
-    return fl.Conv2DGradientNode(a.sess, [a, b], filter_wh)
+def conv2d_grad(grad, b, filter_wh, name=None):
+    return fl.Conv2DGradientNode(a.sess, [a, b], filter_wh, name=name)
 
 def gradients(ys, xs):
 
