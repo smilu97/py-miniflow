@@ -33,7 +33,8 @@ class Node:
         return self.name
 
     def get_result(self):
-        self.result = self.calc_result(*self.get_children_result())
+        if self.result is None:
+            self.result = self.calc_result(*self.get_children_result())
         return self.result
     
     def set_result(self, value):

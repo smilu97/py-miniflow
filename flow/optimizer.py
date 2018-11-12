@@ -9,9 +9,9 @@ class GradientDescentOptimizer:
     
     def minimize(self, target):
         xs = self.sess.trainable_nodes
-        grads = fl.gradients([target], xs)
+        grads = target.sess.run(fl.gradients([target], xs))
         for x, grad in zip(xs, grads):
-            self.apply_gradient(x, grad.get_result())
+            self.apply_gradient(x, grad)
         
     def apply_gradient(self, target, grad):
         target.result -= grad * self.lr

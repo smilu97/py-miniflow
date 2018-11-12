@@ -22,4 +22,12 @@ class Session:
         for node in self.nodes:
             node.gradient = 0
             node.numGradient = 0
+        
+    def run(self, nodes):
+        for node in self.nodes:
+            if node.trainable or node.placeholder:
+                continue
+            node.result = None
+        return [node.get_result() for node in nodes]
+
             
