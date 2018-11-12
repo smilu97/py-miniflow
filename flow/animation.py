@@ -22,7 +22,7 @@ def make_animation1d(x, y, y_, E, optimizer, xlim, ylim, answer, print_error=Tru
         for _ in range(epoch_per_frame):
             optimizer.minimize(E)
         if print_error:
-            print('E:', E.result)
+            print('E:', E.get_result())
         line.set_data(train_x, np.squeeze(y_.get_result()))
         return line,
 

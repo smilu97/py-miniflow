@@ -1,21 +1,20 @@
+import flow as fl
 import numpy as np
 
 class GradientDescentOptimizer:
 
     def __init__(self, sess, lr=0.001):
-        self.lr = lr
         self.sess = sess
+        self.lr = lr
     
     def minimize(self, target):
-        result = target.get_result()
-        self.sess.clean_gradients()
-        target.gradient = np.full_like(result, self.lr)
-        target.propagate_gradient()
-        for node in self.sess.trainable_nodes:
-            self.apply_gradient(node)
+        xs = self.sess.trainable_nodes
+        grads = fl.gradients([target], xs)
+        for x, grad in zip(xs, grads):
+            self.apply_gradient(x, grad.get_result())
         
-    def apply_gradient(self, target):
-        target.result -= target.gradient
+    def apply_gradient(self, target, grad):
+        target.result -= grad * self.lr
 
 class AdamOptimizer(GradientDescentOptimizer):
 
@@ -25,7 +24,7 @@ class AdamOptimizer(GradientDescentOptimizer):
         self.beta2 = beta2
         self.epsilon = epsilon
 
-    def apply_gradient(self, target):
+    def apply_gradient(self, target, grad):
 
         # Get previous props
         props = target.initializer_props
@@ -40,7 +39,7 @@ class AdamOptimizer(GradientDescentOptimizer):
         t = props['t']
 
         # Prepare gradient and constants
-        g = target.gradient
+        g = grad
         lr = self.lr
         beta1 = self.beta1
         beta2 = self.beta2

@@ -480,8 +480,8 @@ class RepeatNode(Node):
         res[x] *= self.count
         return tuple(res)
     
-    def calc_name(self, a, count, axis):
-        return 'Repeat({},{},{})'.format(a, count, axis)
+    def calc_name(self, a):
+        return 'Repeat({},{},{})'.format(a, self.count, self.axis)
     
 class FoldNode(Node):
 

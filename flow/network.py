@@ -1,3 +1,4 @@
+from flow.node import *
 from flow.node.funcs import *
 from flow.initializer import *
 
