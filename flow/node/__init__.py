@@ -42,30 +42,27 @@ class Node:
     def get_children_result(self):
         return (child.get_result() for child in self.children)
     
-    def propagate_gradient(self):
-        gradients = self.calc_gradients()
-        for idx, child in enumerate(self.children):
-            child.add_gradient(gradients[idx])
-            child.numGradient += 1
-            if child.numGradient >= child.parentNum:
-                child.propagate_gradient()
+    # def propagate_gradient(self):
+    #     gradients = self.calc_gradients()
+    #     for idx, child in enumerate(self.children):
+    #         child.add_gradient(gradients[idx])
+    #         child.numGradient += 1
+    #         if child.numGradient >= child.parentNum:
+    #             child.propagate_gradient()
     
-    def add_gradient(self, gradient):
-        if self.result.shape != gradient.shape:
-            for idx, s in enumerate(gradient.shape):
-                r = self.result.shape[idx]
-                if r != s and r == 1:
-                    gradient = np.sum(gradient, axis=idx)
-        if self.gradient is None:
-            self.gradient = gradient
-        else:
-            self.gradient += gradient
+    # def add_gradient(self, gradient):
+    #     if self.result.shape != gradient.shape:
+    #         for idx, s in enumerate(gradient.shape):
+    #             r = self.result.shape[idx]
+    #             if r != s and r == 1:
+    #                 gradient = np.sum(gradient, axis=idx)
+    #     if self.gradient is None:
+    #         self.gradient = gradient
+    #     else:
+    #         self.gradient += gradient
     
     def calc_result(self):
         return self.result
-    
-    def calc_gradients(self):
-        return []
     
     def calc_shape(self):
         return None
@@ -78,14 +75,24 @@ class Node:
     def __add__(self, a):
         a = self.check_transform_constant(a)
         return AddNode(self.sess, [self, a])
+    
+    def __radd__(self, a):
+        return self + a
 
     def __sub__(self, a):
         a = self.check_transform_constant(a)
         return SubNode(self.sess, [self, a])
     
+    def __rsub__(self, a):
+        a = self.check_transform_constant(a)
+        return SubNode(self.sess, [a, self])
+    
     def __mul__(self, a):
         a = self.check_transform_constant(a)
         return MulNode(self.sess, [self, a])
+    
+    def __rmul__(self, a):
+        return self * a
     
     def __matmul__(self, a):
         return MatmulNode(self.sess, [self, a])
@@ -174,7 +181,7 @@ class AddNode(Node):
         return shape_broadcast(a, b)
     
     def calc_name(self, a, b):
-        return 'Add({},{})'.format(a, b)
+        return '({} + {})'.format(a, b)
 
 class SubNode(Node):
 
@@ -201,7 +208,7 @@ class MulNode(Node):
     
     @staticmethod
     def calc_gradients(op, grad):
-        v0, v1 = children
+        v0, v1 = op.children
         return [
             fl.reduce_shape(grad * v1, v0.shape),
             fl.reduce_shape(grad * v0, v1.shape)
@@ -211,7 +218,7 @@ class MulNode(Node):
         return shape_broadcast(a, b)
             
     def calc_name(self, a, b):
-        return 'Mul({},{})'.format(a, b)
+        return '({} * {})'.format(a, b)
 
 class DivNode(Node):
 
