@@ -6,9 +6,11 @@ class Session:
         self.nodes = []
         self.placeholders = {}
         self.trainable_nodes = []
+        self.name_dict = {}
     
     def register_node(self, node):
         self.nodes.append(node)
+        self.name_dict[node.name] = node
         if node.trainable:
             self.trainable_nodes.append(node)
     

@@ -90,6 +90,9 @@ class Node:
     
     def __getitem__(self, key):
         return SelectNode(self.sess, [self], key)
+    
+    def __hash__(self):
+        return self.name.__hash__()
 
 class Variable(Node):
 
