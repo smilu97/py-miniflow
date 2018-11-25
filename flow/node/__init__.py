@@ -117,6 +117,17 @@ class Placeholder(Node):
     
     def calc_shape(self):
         return self.result.shape
+
+class AssignNode(Node):
+
+    def calc_result(self, a, b):
+        self.children[0].result = b
+    
+    def calc_shape(self, a, b):
+        return b
+    
+    def calc_name(self, a, b):
+        return 'Assign({},{})'.format(a, b)
         
 class MatmulNode(Node):
 
