@@ -17,6 +17,7 @@ class Node:
         self.numGradient = 0
         self.trainable = trainable
         self.initializer_props = None
+        self.name = self.get_name() if name is None else name
 
         for child in children:
             child.parentNum += 1
@@ -25,7 +26,6 @@ class Node:
         sess.register_node(self)
 
         self.shape = self.calc_shape(*[child.shape for child in children])
-        self.name = self.get_name() if name is None else name
     
     def get_name(self):
         if (not hasattr(self, 'name')) or self.name is None:

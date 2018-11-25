@@ -32,5 +32,5 @@ try:
     sel = int(input()) - 1
     if type(sel) is type(1) and 0 <= sel < len(tests):
         tests[sel][1]()
-except:
-    print('Invalid input')
+except Exception as e:
+    print('Invalid input', e)

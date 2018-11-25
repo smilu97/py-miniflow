@@ -114,14 +114,12 @@ def conv2d(a, b, name=None):
 
 def conv2d_grad(grad, b, filter_wh, name=None):
     return fl.Conv2DGradientNode(a.sess, [a, b], filter_wh, name=name)
-
+    
 def gradients(ys, xs):
-
-    def clean_parent_num(x):
-        x.grad_parent_num = 0
-        for y in x.children:
-            clean_parent_num(y)
-    for y in ys: clean_parent_num(y)
+    
+    sess = y[0].sess
+    for node in sess.nodes:
+        node.grad_parent_num = 0
 
     def clean_back_grad(x):
         x.grad_cache = None

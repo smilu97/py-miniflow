@@ -24,19 +24,17 @@ def shape_broadcast(s0, s1):
     return tuple(res)
 
 def array_fit_to_shape(a, shape):
-    if len(a.shape) < len(shape):
+    d = len(a.shape) - len(shape)
+    if d < 0:
         raise Exception('Fitting array to shape error: {}, {}'.format(a.shape, shape))
-    asl = len(a.shape) # a.shape.length -> asl
-    sl = len(shape)
-    dl = asl - sl
-    for i in range(dl):
-        a = np.sum(a, 0)
-    for i in range(sl):
-        if a.shape[i] != shape[i] and shape[i] != 1:
-            raise Exception('Fitting array to shape error: {}, {}'.format(a.shape, shape))
-        if shape[i] == 1:
-            a = np.sum(a, i)
-            a = np.expand_dims(a, i)
+    if d > 0:
+        a = np.sum(a, axis=list(range(d)))
+    for i in range(len(shape)):
+        if a.shape[i] != shape[i]:
+            if shape[i] == 1:
+                a = np.sum(a, axis=i, keepdims=True)
+            else:
+                raise Exception('Fitting array to shape error: {}, {}'.format(a.shape, shape))
     return a
 
 def conv2d(a, f):
