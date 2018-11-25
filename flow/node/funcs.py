@@ -117,7 +117,7 @@ def conv2d_grad(grad, b, filter_wh, name=None):
     
 def gradients(ys, xs):
     
-    sess = y[0].sess
+    sess = ys[0].sess
     for node in sess.nodes:
         node.grad_parent_num = 0
 

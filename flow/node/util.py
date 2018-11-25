@@ -28,7 +28,7 @@ def array_fit_to_shape(a, shape):
     if d < 0:
         raise Exception('Fitting array to shape error: {}, {}'.format(a.shape, shape))
     if d > 0:
-        a = np.sum(a, axis=list(range(d)))
+        a = np.sum(a, axis=tuple(range(d)))
     for i in range(len(shape)):
         if a.shape[i] != shape[i]:
             if shape[i] == 1:
