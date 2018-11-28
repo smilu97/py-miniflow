@@ -20,13 +20,15 @@ class SampleOptimizer:
 
 class GradientDescentOptimizer:
 
-    def __init__(self, sess, lr=0.001):
+    def __init__(self, sess, ys, lr=0.001):
         self.sess = sess
         self.lr = lr
-    
-    def minimize(self, target):
         xs = self.sess.trainable_nodes
-        grads = target.sess.run(fl.gradients([target], xs))
+        self.grads = fl.gradients(ys, xs)
+    
+    def minimize(self):
+        xs = self.sess.trainable_nodes
+        grads = self.sess.run(self.grads)
         for x, grad in zip(xs, grads):
             self.apply_gradient(x, grad)
         
@@ -35,8 +37,8 @@ class GradientDescentOptimizer:
 
 class AdamOptimizer(GradientDescentOptimizer):
 
-    def __init__(self, sess, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-08):
-        super().__init__(sess, lr)
+    def __init__(self, sess, ys, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-08):
+        super().__init__(sess, ys, lr=lr)
         self.beta1 = beta1
         self.beta2 = beta2
         self.epsilon = epsilon

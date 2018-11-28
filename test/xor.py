@@ -35,7 +35,7 @@ def test():
     y_ = S1
     E = fl.sum(fl.square(y_ - y), axis=0)
 
-    optimizer = fl.AdamOptimizer(sess, lr=0.1)
+    optimizer = fl.AdamOptimizer(sess, [E], lr=0.1)
 
     if True:  # Pre-calculate before animation
         print('start error:', E.get_result())
@@ -43,7 +43,7 @@ def test():
         epoch = 1000
         with pb.ProgressBar(max_value=epoch) as bar:
             for i in range(epoch):
-                optimizer.minimize(E)
+                optimizer.minimize()
                 bar.update(i)
         
         print('last error:', E.get_result())

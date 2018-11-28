@@ -9,6 +9,7 @@ def make_animation1d(x, y, y_, E, optimizer, xlim, ylim, answer, print_error=Tru
 
     train_x = np.squeeze(x.get_result())
     train_y = np.squeeze(y.get_result())
+    
 
     test_x = np.expand_dims(np.arange(xlim[0], xlim[1], (xlim[1] - xlim[0]) / 300), 1)
     test_y = answer(test_x)
@@ -20,7 +21,7 @@ def make_animation1d(x, y, y_, E, optimizer, xlim, ylim, answer, print_error=Tru
 
     def animate(i):
         for _ in range(epoch_per_frame):
-            optimizer.minimize(E)
+            optimizer.minimize()
         if print_error:
             print('E:', E.get_result())
         line.set_data(train_x, np.squeeze(y_.get_result()))
@@ -55,7 +56,7 @@ def make_animation2d(x, y, y_, E, optimizer, xlim, ylim, print_error=True, epoch
 
         x.set_result(train_x)
         for _ in range(epoch_per_frame):
-            optimizer.minimize(E)
+            optimizer.minimize()
         if print_error:
             print('E:', E.get_result())
             

@@ -11,7 +11,7 @@ from matplotlib import animation
 def answer(x, error=0.0):
     return np.sin(2 * np.pi * x) + np.random.rand(*(x.shape)) * error
     
-train_x  = np.expand_dims(np.arange(-5, 5, 10 / 500), 1)
+train_x  = np.expand_dims(np.arange(-5, 5, 10 / 300), 1)
 train_y = answer(train_x)
 
 def test(train=True):
@@ -28,9 +28,10 @@ def test(train=True):
     S2, W2, b2 = fl.fully_conntected(S1, 1, activation=None, initializer=fl.xavier_initializer())
 
     y_ = S2
-    E = fl.avg(fl.avg(fl.square(y - y_), 0), 0)
+    # E = fl.avg(fl.avg(fl.square(y - y_), 0), 0)
+    E = fl.l2loss(y, y_)
 
-    optimizer = fl.AdamOptimizer(sess, lr=0.001)
+    optimizer = fl.AdamOptimizer(sess, [E], lr=0.001)
     
     if False:  # Pre-training before animation
         for _ in pb.progressbar(range(epoch)):

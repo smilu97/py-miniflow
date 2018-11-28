@@ -418,7 +418,7 @@ class L2LossNode(Node):
 
     def calc_result(self, a, b):
         self.diff = a - b
-        return np.sum(np.square(self.diff) / 2, axis=None)
+        return np.sum(np.square(a - b) / 2)
     
     def calc_gradients(op, grad):
         v0, v1 = op.children

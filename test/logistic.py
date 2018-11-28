@@ -39,7 +39,7 @@ def test():
 
     y_ = S1
     E = fl.l2loss(y, y_)
-    optimizer = fl.AdamOptimizer(sess, lr=0.01)
+    optimizer = fl.AdamOptimizer(sess, [E], lr=0.01)
 
     anim = fl.make_animation2d(x, y, y_, E, optimizer, (0, 7), (0, 7), interval=1, blit=True)
     plt.show()
