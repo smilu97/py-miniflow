@@ -37,10 +37,10 @@ def test():
 
     optimizer = fl.AdamOptimizer(sess, lr=0.1)
 
-    if False:  # Pre-calculate before animation
+    if True:  # Pre-calculate before animation
         print('start error:', E.get_result())
 
-        epoch = 10000
+        epoch = 1000
         with pb.ProgressBar(max_value=epoch) as bar:
             for i in range(epoch):
                 optimizer.minimize(E)
@@ -50,7 +50,7 @@ def test():
 
     anim = fl.make_animation2d(x, y, y_, E, optimizer, (-1, 2), (-1, 2), epoch_per_frame=50, frames=50, interval=80, blit=True)
 
-    if True :
+    if True:
         plt.show()
     else:
         anim.save('static/xor.gif', writer='imagemagick')

@@ -11,7 +11,7 @@ from matplotlib import animation
 def answer(x, error=0.0):
     return np.sin(2 * np.pi * x) + np.random.rand(*(x.shape)) * error
     
-train_x  = np.expand_dims(np.arange(-5, 5, 10 / 100), 1)
+train_x  = np.expand_dims(np.arange(-5, 5, 10 / 500), 1)
 train_y = answer(train_x)
 
 def test(train=True):

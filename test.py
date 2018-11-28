@@ -6,8 +6,10 @@ from test.xor import test as xor_test
 from test.logistic import test as logistic_test
 from test.mnist_cnn import test as mnist_test
 from test.grad import test as grad_test
+from test.tmp import test as tmp_test
 
 tests = [
+    ['tmp', tmp_test],
     ['sin', sin_test],
     ['xor', xor_test],
     ['logistic', logistic_test],

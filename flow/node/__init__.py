@@ -52,7 +52,7 @@ class Node:
         return None
     
     def check_transform_constant(self, x):
-        if type(x) == (type(0) or type(0.0)):
+        if type(x) == type(0) or type(x) == type(0.0):
             x = Placeholder(self.sess, np.array([x]), str(x))
         return x
     
@@ -128,6 +128,18 @@ class AssignNode(Node):
     
     def calc_name(self, a, b):
         return 'Assign({},{})'.format(a, b)
+    
+class GroupNode(Node):
+
+    def calc_result(self, *args):
+        pass
+    
+    def calc_shape(self, *args):
+        pass
+    
+    def calc_name(self, *args):
+        n = ','.join([a.name for a in args])
+        return 'Group({})'.format(n)
         
 class MatmulNode(Node):
 

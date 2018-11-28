@@ -19,6 +19,12 @@ def ones_like(sess, a, name='ones'):
 def empty_like(sess, a, name='empty'):
     return fl.Placeholder(sess, np.empty_like(a.shape), name)
 
+def assign(a, b, name=None):
+    return fl.AssignNode(a.sess, [a, b], name=name)
+
+def group(*args, name=None):
+    return fl.GroupNode(a.sess, args, name=name)
+
 def matmul(a, b, name=None):
     return fl.MatmulNode(a.sess, [a, b], name=name)
 
