@@ -14,7 +14,7 @@ def rand_initializer(min_value=0.0, max_value=1.0):
         
     return initializer
 
-def randn_initializer(min_value=0.0, max_value=1.0):
+def randn_initializer(min_value=-1.0, max_value=1.0):
     diff = max_value - min_value
     def initializer(sess, shape):
         return np.random.randn(*shape) * diff - min_value

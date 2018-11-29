@@ -33,8 +33,8 @@ def array_fit_to_shape(a, shape):
         if a.shape[i] != shape[i]:
             if shape[i] == 1:
                 a = np.sum(a, axis=i, keepdims=True)
-            else:
-                raise Exception('Fitting array to shape error: {}, {}'.format(a.shape, shape))
+            # else:
+            #     raise Exception('Fitting array to shape error: {}, {}'.format(a.shape, shape))
     return a
 
 def conv2d(a, f):

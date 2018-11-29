@@ -52,6 +52,15 @@ def relu(a, name=None):
 def relu_grad(a, name=None):
     return fl.ReluGradNode(a.sess, [a], name=name)
 
+def elu(a, name=None):
+    return fl.EluNode(a.sess, [a], name=name)
+
+def elu_grad(a, grad, name=None):
+    return fl.EluGradNode(a.sess, [a, grad], name=name)
+
+def gelu(a, name=None):
+    return fl.sigmoid(1.702 * a) * a
+
 def leaky_relu(a, alpha=0.2, name=None):
     return fl.LeakyReluNode(a.sess, [a], alpha, name=name)
 
@@ -61,11 +70,11 @@ def leaky_relu_grad(a, grad, alpha=0.2, name=None):
 def tanh(a, name=None):
     return fl.TanhNode(a.sess, [a], name=name)
 
-def softmax(a, name=None):
-    return fl.SoftmaxNode(a.sess, [a], name=name)
+def softmax(a, axis, name=None):
+    return fl.SoftmaxNode(a.sess, [a], axis, name=name)
 
-def softmax_grad(a, grad, name=None):
-    return fl.SoftmaxGradNode(a.sess, [a, grad], name=name)
+def softmax_grad(a, axis, name=None):
+    return fl.SoftmaxGradNode(a.sess, [a], axis, name=name)
 
 def log(a, name=None):
     return fl.LogNode(a.sess, [a], name=name)
@@ -115,6 +124,18 @@ def reshape(a, shape, name=None):
 def avg(a, axis, name=None):
     return fl.AvgNode(a.sess, [a], axis, name=name)
 
+def cross_entropy(a, b, name=None):
+    return fl.CrossEntropyNode(a.sess, [a, b], name=name)
+
+def cross_entropy_grad(a, b, name=None):
+    return fl.CrossEntropyGradNode(a.sess, [a, b], name=name)
+
+def softmax_cross_entropy_loss(a, b, axis, name=None):
+    return fl.SoftmaxCrossEntropyLossNode(a.sess, [a, b], axis, name=name)
+
+def softmax_cross_entropy_loss_grad(a, b, axis, name=None):
+    return fl.SoftmaxCrossEntropyLossGradNode(a.sess, [a, b], axis, name=name)
+
 def conv2d(a, b, name=None):
     return fl.Conv2DNode(a.sess, [a, b], name=name)
 
@@ -136,7 +157,7 @@ def gradients(ys, xs):
             y.grad_parent_num += 1
         
     for y in ys: clean_back_grad(y)
-    for y in ys: y.grad_cache = ones(y.sess, y.shape)
+    for y in ys: y.grad_cache = ones(y.sess, (1,))
 
     def calc_back_grad(x):
         if len(x.children) == 0:

@@ -33,9 +33,13 @@ class Node:
         return self.name
 
     def get_result(self):
-        if self.result is None:
-            self.result = self.calc_result(*self.get_children_result())
-        return self.result
+        try:
+            if self.result is None:
+                self.result = self.calc_result(*self.get_children_result())
+            return self.result
+        except Exception as e:
+            print(self.name, 'error')
+            raise e
     
     def set_result(self, value):
         self.result = value
@@ -279,7 +283,7 @@ class ReluNode(Node):
         return np.maximum(a, 0)
     
     def calc_gradients(op, grad):
-        return [fl.relu_grad(op.children[0], grad)]
+        return [fl.relu_grad(op.children[0]) * grad]
     
     def calc_shape(self, a):
         return a
@@ -289,14 +293,14 @@ class ReluNode(Node):
     
 class ReluGradNode(Node):
 
-    def calc_result(self, a, grad):
-        return np.heaviside(a, 0) * grad
+    def calc_result(self, a):
+        return np.heaviside(a, 0)
     
-    def calc_shape(self, a, grad):
+    def calc_shape(self, a):
         return a
     
-    def calc_name(self, a, grad):
-        return 'ReluGrad({},{})'.format(a, grad)
+    def calc_name(self, a):
+        return 'ReluGrad({})'.format(a)
 
 class LeakyReluNode(Node):
 
@@ -304,12 +308,11 @@ class LeakyReluNode(Node):
         self.alpha = alpha
         super().__init__(sess, children)
 
-    def calc_result(op, grad):
-        return [fl.leaky_relu_grad(op.children[0], grad, op.alpha)]
+    def calc_result(self, a):
+        return np.where(a>0, a, a*self.alpha)
     
-    def calc_gradients(self):
-        v0 = self.children[0].get_result()
-        return [np.where(v0 > 0, 1, self.alpha) * self.gradient]
+    def calc_gradients(op, grad):
+        return [fl.leaky_relu_grad(op.children[0], grad, op.alpha)]
     
     def calc_shape(self, a):
         return a
@@ -324,7 +327,41 @@ class LeakyReluGradNode(Node):
         super().__init__(sess, children, **kwargs)
 
     def calc_result(self, a, grad):
-        return [np.where(a > 0, 1, self.alpha) * grad]
+        return np.where(a > 0, 1, self.alpha) * grad
+    
+    def calc_shape(self, a, grad):
+        return a
+    
+    def calc_name(self, a, grad):
+        return 'LReluGrad({})({},{})'.format(self.alpha, a, grad)
+
+class EluNode(Node):
+
+    def __init__(self, sess, children, alpha):
+        self.alpha = alpha
+        super().__init__(sess, children)
+
+    def calc_result(self, a):
+        return np.where(a>0, a, (np.exp(a)-1)*self.alpha)
+    
+    def calc_gradients(op, grad):
+        v0, = op.children
+        return [fl.elu_grad(v0, grad)]
+    
+    def calc_shape(self, a):
+        return a
+    
+    def calc_name(self, a):
+        return 'LRelu({})({})'.format(self.alpha, a)
+    
+class EluGradNode(Node):
+
+    def __init__(self, sess, children, alpha, **kwargs):
+        self.alpha = alpha
+        super().__init__(sess, children, **kwargs)
+
+    def calc_result(self, a, grad):
+        return [np.where(a > 0, 1, np.exp(a)*self.alpha) * grad]
     
     def calc_shape(self, a, grad):
         return a
@@ -334,12 +371,17 @@ class LeakyReluGradNode(Node):
 
 class SoftmaxNode(Node):
 
+    def __init__(self, sess, children, axis, **kwargs):
+        self.axis = axis
+        super().__init__(sess, children, **kwargs)
+
     def calc_result(self, a):
-        self.exps = np.exp(a - np.max(a))
-        return self.exps / np.sum(self.exps)
+        ax = self.axis
+        e = np.exp(a - np.max(a, axis=ax, keepdims=True))
+        return e / np.sum(e, axis=ax, keepdims=True)
     
     def calc_gradients(op, grad):
-        return [fl.softmax_grad(op.children[0], grad)]
+        return [fl.softmax_grad(op.children[0], op.axis) * grad]
     
     def calc_shape(self, a):
         return a
@@ -349,17 +391,21 @@ class SoftmaxNode(Node):
 
 class SoftmaxGradNode(Node):
 
-    def calc_result(self, a, grad):
-        exps = np.exp(a - np.max(a))
-        expsum = np.sum(exps)
-        A = expsum - exps
-        return grad * (exps * A + (exps ** 2)) / (A ** 2)
+    def __init__(self, sess, children, axis, **kwargs):
+        self.axis = axis
+        super().__init__(sess, children, **kwargs)
+
+    def calc_result(self, a):
+        ax = self.axis
+        e = np.exp(a - np.max(a, axis=ax, keepdims=True))
+        es = np.sum(e, axis=ax, keepdims=True)
+        return e * (1 - es)
     
-    def calc_shape(self, a, grad):
+    def calc_shape(self, a):
         return a
     
-    def calc_name(self, a, grad):
-        return 'SoftmaxGradNode({},{})'.format(a, grad)
+    def calc_name(self, a):
+        return 'SoftmaxGradNode({})'.format(a)
     
 class LogNode(Node):
 
@@ -679,6 +725,73 @@ class TransposeNode(Node):
     
     def calc_name(self, a):
         return 'Transpose({})'.format(a)
+
+class CrossEntropyNode(Node):
+
+    def calc_result(self, a, b):
+        return -np.sum(a*np.log(b))
+    
+    def calc_gradients(op, grad):
+        return [None, fl.cross_entropy_grad(op.children[0], op.children[1]) * grad]
+    
+    def calc_shape(self, a, b):
+        return shape_broadcast(a, b)
+    
+    def calc_name(self, a, b):
+        return 'CrossEntropy({},{})'.format(a, b)
+
+class CrossEntropyGradNode(Node):
+
+    def calc_result(self, a, b):
+        return a / b
+    
+    def calc_shape(self, a, b):
+        return shape_broadcast(a, b)
+    
+    def calc_name(self, a, b):
+        return 'CrossEntropyGrad({},{})'.format(a, b)
+
+class SoftmaxCrossEntropyLossNode(Node):
+
+    def __init__(self, sess, children, axis, **kwargs):
+        self.axis = axis
+        super().__init__(sess, children, **kwargs)
+
+    def calc_result(self, a, b):
+        ax = self.axis
+        e = np.exp(b - np.max(b, axis=ax, keepdims=True))
+        e = e / np.sum(e, axis=ax, keepdims=True)
+        return -np.sum(a*np.log(e))
+    
+    def calc_gradients(op, grad):
+        v0, v1 = op.children
+        return [None, fl.softmax_cross_entropy_loss_grad(v0, v1, op.axis) * grad]
+    
+    def calc_shape(self, a, b):
+        return shape_broadcast(a, b)
+    
+    def calc_name(self, a, b):
+        return 'SCEL({},{})'.format(a, b)
+
+class SoftmaxCrossEntropyLossGradNode(Node):
+
+    def __init__(self, sess, children, axis, **kwargs):
+        self.axis = axis
+        super().__init__(sess, children, **kwargs)
+
+    def calc_result(self, a, b):
+        ax = self.axis
+        e = np.exp(b - np.max(b, axis=ax, keepdims=True))
+        es = np.sum(e, axis=ax, keepdims=True)
+        e = e / es
+        return e * np.sum(a, axis=ax, keepdims=True) - a
+    
+    def calc_shape(self, a, b):
+        return shape_broadcast(a, b)
+    
+    def calc_name(self, a, b):
+        return 'SCELGrad({},{})'.format(a, b)
+
     
 class Conv2DNode(Node):
 
