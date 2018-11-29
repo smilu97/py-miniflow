@@ -113,6 +113,8 @@ class Variable(Node):
 class Placeholder(Node):
 
     def __init__(self, sess, value, name):
+        if type(value) is type((1,)) or type(value) is type([1]):
+            value = np.zeros([2 if a is None else a for a in value])
         self.result = np.float32(value)
         self.name = name
         sess.register_placeholder(self)

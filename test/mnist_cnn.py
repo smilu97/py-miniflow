@@ -38,6 +38,11 @@ def test():
     _, labels = read_y('data/mnist/train_y')
     vec_size = 28 * 28
     batch_size = 6000
+    class_num = 10
+    hidden_sizes = 256, 128
+    lr = 0.001
+    epoch = 15
+
 
     num_test, test_images, _, _ = read_x('data/mnist/test_x')
     _, test_labels = read_y('data/mnist/test_y')
@@ -49,29 +54,26 @@ def test():
 
     sess = fl.Session()
     sess.fan_in = vec_size
-    sess.fan_out = 10
+    sess.fan_out = class_num
 
-    input_x = fl.Placeholder(sess, images, 'x')
-    output_y = fl.Placeholder(sess, labels, 'y')
+    input_x = fl.Placeholder(sess, (None, vec_size), 'x')
+    output_y = fl.Placeholder(sess, (None, class_num), 'y')
+    H = input_x
+    for hs in hidden_sizes:
+        H, _, _ = fl.fully_conntected(H, hs, activation=fl.relu, initializer=fl.xavier_initializer())
+    y_, _, _ = fl.fully_conntected(H, class_num, activation=fl.relu, initializer=fl.xavier_initializer())
 
-    S0, _, _ = fl.fully_conntected(input_x, 256, activation=fl.gelu, initializer=fl.xavier_initializer())
-    S1, _, _ = fl.fully_conntected(S0, 128, activation=fl.gelu, initializer=fl.xavier_initializer())
-    S2, _, _ = fl.fully_conntected(S1, 10, activation=fl.gelu, initializer=fl.xavier_initializer())
-
-    y_ = S2
     E = fl.softmax_cross_entropy_loss(output_y, y_, 1)
     # E = fl.l2loss(output_y, y_)
-    optimizer = fl.AdamOptimizer(sess, [E], lr=0.001)
+    optimizer = fl.AdamOptimizer(sess, [E], lr=lr)
     
-    for _ in range(10):
-        input_x.set_result(test_images)
-        output_y.set_result(test_labels)
-        print('E:', E.get_result() / num_test)
-        print('acc:', np.sum(np.argmax(y_.get_result(), axis=1) == np.argmax(test_labels, 1)) / num_test)
-        for _ in range(10):
-            for batch_x, batch_y in mini_batch(images, labels, batch_size):
-                input_x.set_result(batch_x)
-                output_y.set_result(batch_y)
-                optimizer.minimize()
-            print('E:', E.get_result() / batch_size)
-        
+    for _ in range(epoch):
+        for batch_x, batch_y in mini_batch(images, labels, batch_size):
+            input_x.set_result(batch_x)
+            output_y.set_result(batch_y)
+            optimizer.minimize()
+        print('E:', E.get_result() / batch_size)
+    input_x.set_result(test_images)
+    output_y.set_result(test_labels)
+    print('E:', E.get_result() / num_test)
+    print('acc:', np.sum(np.argmax(y_.get_result(), axis=1) == np.argmax(test_labels, 1)) / num_test)
