@@ -23,13 +23,12 @@ def test(train=True):
     x = fl.Placeholder(sess, train_x, 'x')
     y = fl.Placeholder(sess, train_y, 'y')
 
-    S0, W0, b0 = fl.fully_conntected(x, 100, activation=fl.tanh, initializer=fl.xavier_initializer())
-    S1, W1, b1 = fl.fully_conntected(S0, 100, activation=fl.tanh, initializer=fl.xavier_initializer())
-    S2, W2, b2 = fl.fully_conntected(S1, 100, activation=fl.tanh, initializer=fl.xavier_initializer())
-    S3, W3, b3 = fl.fully_conntected(S2, 100, activation=fl.tanh, initializer=fl.xavier_initializer())
-    S4, W4, b4 = fl.fully_conntected(S3, 1, activation=None, initializer=fl.xavier_initializer())
+    S = x
+    for _ in range(7):
+        S, _, _ = fl.fully_conntected(S, 100, activation=fl.tanh, initializer=fl.xavier_initializer())
+    S, _, _ = fl.fully_conntected(S, 1, activation=None, initializer=fl.xavier_initializer())
 
-    y_ = S4
+    y_ = S
     # E = fl.avg(fl.avg(fl.square(y - y_), 0), 0)
     E = fl.l2loss(y, y_)
 
